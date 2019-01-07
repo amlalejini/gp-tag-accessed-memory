@@ -3795,11 +3795,33 @@ TEST_CASE("RandomProgramsNumericArgs", "[taglgp]") {
 
   for (size_t p = 0; p < 10; ++p) {
     std::cout << "=========================" << std::endl;
-    std::cout << "Random program #" << p << "..." << std::endl;
+    std::cout << "Random program with NUMERIC ARGUMENTS #" << p << "..." << std::endl;
     program_t prg(inst_lib);
     size_t N = random->GetUInt(8, 32);
     for (size_t i = 0; i < N; ++i) {
       prg.PushInst(TagLGP::GenRandTagGPInst_NumArgs(*random, *inst_lib, cpu.GetMemSize()-1));
+    }
+    prg.Print(); 
+  }
+
+  for (size_t p = 0; p < 10; ++p) {
+    std::cout << "=========================" << std::endl;
+    std::cout << "Random program with TAG ARGUMENTS #" << p << "..." << std::endl;
+    program_t prg(inst_lib);
+    size_t N = random->GetUInt(8, 32);
+    for (size_t i = 0; i < N; ++i) {
+      prg.PushInst(TagLGP::GenRandTagGPInst(*random, *inst_lib));
+    }
+    prg.Print(); 
+  }
+
+  for (size_t p = 0; p < 10; ++p) {
+    std::cout << "=========================" << std::endl;
+    std::cout << "Random program with NUMERIC AND TAG ARGUMENTS #" << p << "..." << std::endl;
+    program_t prg(inst_lib);
+    size_t N = random->GetUInt(8, 32);
+    for (size_t i = 0; i < N; ++i) {
+      prg.PushInst(TagLGP::GenRandTagGPInst_TagAndNumArgs(*random, *inst_lib, cpu.GetMemSize()-1));
     }
     prg.Print(); 
   }

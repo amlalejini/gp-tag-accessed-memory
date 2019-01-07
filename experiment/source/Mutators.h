@@ -20,15 +20,20 @@ struct TagLGPMutator {
   
   size_t MAX_PROGRAM_LEN;
   size_t MIN_PROGRAM_LEN;
+  size_t MAX_NUMERIC_ARG;
+
+  bool USE_NUMERIC_ARGUMENTS;
+  bool USE_TAG_ARGUMENTS;
 
   double PER_BIT_FLIP;
+  double PER_NUMERIC_ARG_SUB;
   double PER_INST_SUB;
   double PER_INST_INS;
   double PER_INST_DEL;
   double PER_PROG_SLIP;
   double PER_MOD_DUP;
   double PER_MOD_DEL;
-
+  
   enum ModuleMutType { DUP=0, DEL, NONE };
 
   struct ModuleInfo {
@@ -143,8 +148,6 @@ struct TagLGPMutator {
 
     }
 
-
-
     // Slip? -> If so, where?
     bool slip = false;
     bool slip_dup = false;
@@ -211,7 +214,14 @@ struct TagLGPMutator {
       if (rnd.P(PER_INST_INS) && ((expected_size+1)<=(int)MAX_PROGRAM_LEN)) {
         ++expected_size;
         ++mut_cnt;
-        new_program.PushInst(TagLGP::GenRandTagGPInst(rnd, ilib));
+
+        if (USE_NUMERIC_ARGUMENTS && !USE_TAG_ARGUMENTS) {
+          new_program.PushInst(TagLGP::GenRandTagGPInst_NumArgs(rnd, ilib, MAX_NUMERIC_ARG));
+        } else if (!USE_NUMERIC_ARGUMENTS && USE_TAG_ARGUMENTS) {
+          new_program.PushInst(TagLGP::GenRandTagGPInst(rnd, ilib));
+        } else { // Allowing for BOTH types of arguments
+          new_program.PushInst(TagLGP::GenRandTagGPInst_TagAndNumArgs(rnd, ilib, MAX_NUMERIC_ARG));
+        }
       }
 
       // Instruction substitution
@@ -220,7 +230,14 @@ struct TagLGPMutator {
         new_program[whead].id = rnd.GetUInt(ilib.GetSize());
       }
 
-      // Instruction argument bit flips
+      // Argument substitutions
+      // - Numeric arguments (if there are none, will never enter for loop)
+      for (size_t arg = 0; arg < new_program[whead].arg_nums.size(); ++arg) {
+        if (rnd.P(PER_NUMERIC_ARG_SUB)) {
+          new_program[whead].arg_nums[arg] = rnd.GetUInt(0, MAX_NUMERIC_ARG+1);
+        }
+      }
+      // - tag arguments (if there are none, will never enter for loop)
       for (size_t arg = 0; arg < new_program[whead].arg_tags.size(); ++arg) {
         tag_t & tag = new_program[whead].arg_tags[arg];
         for (size_t k = 0; k < tag.GetSize(); ++k) {

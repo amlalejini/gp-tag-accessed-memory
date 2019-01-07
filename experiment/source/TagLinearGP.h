@@ -516,8 +516,10 @@ namespace TagLGP {
       emp::vector<tag_t> arg_tags;
       emp::vector<size_t> arg_nums;
 
-      Instruction(size_t _id=0, const emp::vector<tag_t> & _arg_tags=emp::vector<tag_t>())
-        : id(_id), arg_tags(_arg_tags), arg_nums() { ; }
+      Instruction(size_t _id=0, 
+                  const emp::vector<tag_t> & _arg_tags=emp::vector<tag_t>(),
+                  const emp::vector<size_t> & _arg_nums=emp::vector<size_t>())
+        : id(_id), arg_tags(_arg_tags), arg_nums(_arg_nums) { ; }
 
       Instruction(size_t _id, const emp::vector<size_t> & _arg_nums)
         : id(_id), arg_tags(), arg_nums(_arg_nums) { ; }
@@ -568,6 +570,12 @@ namespace TagLGP {
         id = _id;
         arg_tags.clear();
         arg_nums = _args;
+      }
+
+      void Set(size_t _id, const emp::vector<tag_t> & t_args, const emp::vector<size_t> & n_args) {
+        id = _id;
+        arg_tags = t_args;
+        arg_nums = n_args;
       }
 
       void Set(const Instruction & other) {
