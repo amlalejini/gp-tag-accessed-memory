@@ -3740,7 +3740,7 @@ TEST_CASE("RandomPrograms", "[taglgp]") {
   // inst_lib->Print(); std::cout << std::endl;
 
   // Run a bunch of randomly generated programs for 1024 updates
-  for (size_t p = 0; p < 1000; ++p) {
+  for (size_t p = 0; p < 100; ++p) {
     cpu.Reset(); // Hard reset on virtual CPU
 
     std::cout << "Testing random program #" << p << "..." << std::endl;
@@ -3766,4 +3766,41 @@ TEST_CASE("RandomPrograms", "[taglgp]") {
     std::cout << " ...Done." << std::endl;
   }
   cpu.GetProgram().Print();
+}
+
+TEST_CASE("RandomProgramsNumericArgs", "[taglgp]") {
+  constexpr size_t TAG_WIDTH = 4;
+  constexpr int seed = 2;
+
+  // Not going to use tags, but still have to define TagLinearGP virtual hardware with tag width.
+  using hardware_t = TagLGP::TagLinearGP_TW<TAG_WIDTH>;
+  using program_t = typename hardware_t::program_t;
+  using inst_t = typename hardware_t::inst_t;
+  using inst_lib_t = TagLGP::InstLib<hardware_t>;
+
+  emp::Ptr<emp::Random> random = emp::NewPtr<emp::Random>(seed);
+
+  emp::Ptr<inst_lib_t> inst_lib = emp::NewPtr<inst_lib_t>();
+  hardware_t cpu(inst_lib, random);
+
+  // Configure CPU
+  emp::vector<emp::BitSet<TAG_WIDTH>> matrix = GenHadamardMatrix<TAG_WIDTH>();
+  cpu.SetMemSize(TAG_WIDTH);
+  cpu.SetMemTags(matrix); // Not going to use these here, but no harm in setting them up.
+
+  // Add some garbage instructions to instruction set
+  for (size_t i = 0; i <= 16; ++i) {
+    inst_lib->AddInst("Nop-" + emp::to_string(i), [](hardware_t & hw, const inst_t & inst) { } );
+  }
+
+  for (size_t p = 0; p < 10; ++p) {
+    std::cout << "=========================" << std::endl;
+    std::cout << "Random program #" << p << "..." << std::endl;
+    program_t prg(inst_lib);
+    size_t N = random->GetUInt(8, 32);
+    for (size_t i = 0; i < N; ++i) {
+      prg.PushInst(TagLGP::GenRandTagGPInst_NumArgs(*random, *inst_lib, cpu.GetMemSize()-1));
+    }
+    prg.Print(); 
+  }
 }
