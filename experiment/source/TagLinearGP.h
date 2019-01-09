@@ -1519,7 +1519,9 @@ namespace TagLGP {
       os << "----------BOTTOM----------\n"; 
     }
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // ------- TAG-BASED MEMORY Instructions --------
+    //////////////////////////////////////////////////////
 
     // - Numeric -
     static void Inst_Add(hardware_t & hw, const inst_t & inst) {
@@ -2435,6 +2437,517 @@ namespace TagLGP {
     
     // - MISC -
     static void Inst_Nop(hardware_t & hw, const inst_t & inst) { return; }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Numeric argument instructions
+    ////////////////////////////////////////////////////////
+    // bool IsValidMemPos(size_t pos)
+    // bool IsValidMemPos(const Memory & mem, size_t pos, MemPosType mem_type)
+    // bool IsValidMemPos(const Memory & mem, size_t pos, std::unordered_set<MemPosType> mem_types) 
+
+    static void Inst_Add__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+      // Get arguments
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+      //  mem[C] = mem[A] + mem[B]
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      wmem.Set(posC, A + B);
+    }
+
+    static void Inst_Sub__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      //  mem[C] = mem[A] - mem[B]
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      wmem.Set(posC, A - B);
+    }
+
+    static void Inst_Mult__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      //  mem[C] = mem[A] * mem[B]
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      wmem.Set(posC, A * B);
+    }
+
+    static void Inst_Div__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      //  mem[C] = mem[A] / mem[B]
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      if (B != 0.0) { wmem.Set(posC, A / B); }
+    }
+
+    static void Inst_Mod__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      //  mem[C] = mem[A] % mem[B]
+      const int A = (int)wmem.AccessVal(posA).GetNum();
+      const int B = (int)wmem.AccessVal(posB).GetNum();
+      if (B != 0) { wmem.Set(posC, static_cast<int64_t>(A) % static_cast<int64_t>(B)); }
+    }
+
+    static void Inst_TestNumEqu__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+
+      wmem.Set(posC, A == B);
+    }
+
+    static void Inst_TestNumNEqu__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+
+      wmem.Set(posC, A != B);
+    }
+
+    static void Inst_TestNumLess__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      wmem.Set(posC, A < B);
+    }
+
+    static void Inst_TestNumLessTEqu__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      wmem.Set(posC, A <= B);
+    }
+
+    static void Inst_TestNumGreater__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      wmem.Set(posC, A > B);
+    }
+
+    static void Inst_TestNumGreaterTEqu__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      const double A = wmem.AccessVal(posA).GetNum();
+      const double B = wmem.AccessVal(posB).GetNum();
+      wmem.Set(posC, A >= B);
+    }
+
+    static void Inst_Floor__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+
+      // floor(mem[A]);
+      const double A = wmem.AccessVal(posA).GetNum();
+      wmem.Set(posA, std::floor(A));
+    }
+
+    static void Inst_Not__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+
+      // mem[A] = !mem[A];
+      const double A = wmem.AccessVal(posA).GetNum();
+      wmem.Set(posA, (double)(!(bool)A));
+    }
+
+    static void Inst_Inc__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+
+      // mem[A] += 1;
+      const double A = wmem.AccessVal(posA).GetNum();
+      wmem.Set(posA, A+1.0);
+    }
+
+    static void Inst_Dec__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::NUM)) return;
+
+      // mem[A] -= 1;
+      const double A = wmem.AccessVal(posA).GetNum();
+      wmem.Set(posA, A-1.0);
+    }
+
+    static void Inst_CopyMem__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 2);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(posB)) return;
+
+      wmem.Set(posB, wmem.GetPos(posA));
+    }
+
+    static void Inst_SwapMem__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 2);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(posB)) return;
+
+      wmem.Swap(posA, posB);
+    }
+
+    static void Inst_Input__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+      memory_t & imem = state.GetInputMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 2);
+      size_t iposA = inst.arg_nums[0]; if (!hw.IsValidMemPos(iposA)) return;
+      size_t wposB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wposB)) return;
+
+      wmem.Set(wposB, imem.GetPos(iposA));
+    }
+
+    static void Inst_Output__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+      memory_t & omem = state.GetOutputMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 2);
+      size_t wposA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wposA)) return;
+      size_t oposB = inst.arg_nums[1]; if (!hw.IsValidMemPos(oposB)) return;
+
+      omem.Set(oposB, wmem.GetPos(wposA));
+    }
+
+    static void Inst_CommitGlobal__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+      memory_t & gmem = hw.GetGlobalMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 2);
+      size_t wposA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wposA)) return;
+      size_t gposB = inst.arg_nums[1]; if (!hw.IsValidMemPos(gposB)) return;
+
+      gmem.Set(gposB, wmem.GetPos(wposA));
+    }
+
+    static void Inst_PullGlobal__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+      memory_t & gmem = hw.GetGlobalMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 2);
+      size_t gposA = inst.arg_nums[0]; if (!hw.IsValidMemPos(gposA)) return;
+      size_t wposB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wposB)) return;
+
+      wmem.Set(wposB, gmem.GetPos(gposA));
+    }
+
+    static void Inst_TestMemEqu__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(posB)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      wmem.Set(posC, wmem.GetPos(posA) == wmem.GetPos(posB));
+    }
+
+    static void Inst_TestMemNEqu__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find arguments.
+      emp_assert(inst.arg_nums.size() >= 3);
+      size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+      size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(posB)) return;
+      size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
+
+      wmem.Set(posC, wmem.GetPos(posA) != wmem.GetPos(posB));
+    }
+
+    static void Inst_If__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find the end of flow
+      const size_t cur_ip = state.GetIP();
+      const size_t cur_mp = state.GetMP();
+      size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
+      size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
+      
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0];
+
+      bool skip = false;
+      if (!hw.IsValidMemPos(posA)) skip = true;                        // SKip if failed to find valid mem pos
+      else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;  // Skip if best match is not a number
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;        // Skip if best match = 0 
+
+      if (skip) {
+        state.SetIP(eof);
+        // Advance past the flow close if not at end of module
+        if (hw.ValidPosition(state.GetMP(), eof)) state.AdvanceIP();
+      } else {
+        // Open flow
+        hw.OpenFlow(state, FlowType::BASIC, bof, eof, cur_mp, cur_ip);
+      }
+    }
+
+    static void Inst_IfNot__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find the end of flow
+      const size_t cur_ip = state.GetIP();
+      const size_t cur_mp = state.GetMP();
+      size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
+      size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
+      
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0];
+
+      bool skip = false;
+      if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
+      else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true; // Skip if best match is not a number
+      else if (wmem.AccessVal(posA).GetNum() != 0) skip = true;       // Skip if best match != 0 
+
+      if (skip) {
+        state.SetIP(eof);
+        // Advance past the flow close if not at end of module
+        if (hw.ValidPosition(state.GetMP(), eof)) state.AdvanceIP();
+      } else {
+        // Open flow
+        hw.OpenFlow(state, FlowType::BASIC, bof, eof, cur_mp, cur_ip);
+      }
+    }
+
+    static void Inst_While__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find the end of flow
+      const size_t cur_ip = state.GetIP();
+      const size_t cur_mp = state.GetMP();
+      size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
+      size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
+      
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0];
+
+      bool skip = false;
+      if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
+      else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;    // Skip if best match is not a number
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0 
+
+      if (skip) {
+        state.SetIP(eof);
+        state.GetTopFlow().iter = 0;
+        // Advance past the flow close if not at end of module
+        if (hw.ValidPosition(state.GetMP(), eof)) state.AdvanceIP();
+      } else {
+        // Open flow
+        hw.OpenFlow(state, FlowType::LOOP, bof, eof, cur_mp, cur_ip);
+      }
+    }
+
+    static void Inst_Countdown__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find the end of flow
+      const size_t cur_ip = state.GetIP();
+      const size_t cur_mp = state.GetMP();
+      size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
+      size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
+      
+      emp_assert(inst.arg_nums.size() >= 1);
+      size_t posA = inst.arg_nums[0];
+
+      bool skip = false;
+      if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
+      else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;    // Skip if best match is not a number
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0 
+
+      if (skip) {
+        state.SetIP(eof);
+        state.GetTopFlow().iter = 0;
+        // Advance past the flow close if not at end of module
+        if (hw.ValidPosition(state.GetMP(), eof)) state.AdvanceIP();
+      } else {
+        emp_assert(wmem.GetPosType(posA) == MemPosType::NUM);
+        // Decrement
+        const double val = wmem.AccessVal(posA).GetNum();
+        wmem.Set(posA, val-1);
+        // Open flow
+        hw.OpenFlow(state, FlowType::LOOP, bof, eof, cur_mp, cur_ip);
+      }
+    }
+
+    static void Inst_Foreach__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+      CallState & state = hw.GetCurCallState();
+      memory_t & wmem = state.GetWorkingMem();
+
+      // Find the end of flow
+      const size_t cur_ip = state.GetIP();
+      const size_t cur_mp = state.GetMP();
+      size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
+      size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
+    
+      emp_assert(inst.arg_nums.size() >= 2);
+      size_t posA = inst.arg_nums[0];
+      size_t posB = inst.arg_nums[1];
+
+      bool skip = false;
+      if (!hw.IsValidMemPos(posA) || !hw.IsValidMemPos(wmem, posB, MemPosType::VEC)) skip = true;                       // SKip if failed to find valid mem pos
+      else if (state.GetTopFlow().iter >= wmem.AccessVec(posB).size()) skip = true;
+  
+      if (skip) {
+        state.SetIP(eof);
+        state.GetTopFlow().iter = 0; // Loop's parent flow
+        // Advance past the flow close if not at end of module
+        if (hw.ValidPosition(state.GetMP(), eof)) state.AdvanceIP();
+      } else {
+        // emp_assert(wmem.GetPosType(posA) == MemPosType::NUM);
+        // mem[posA] = vec[iter]
+        wmem.Set(posA, wmem.AccessVec(posB)[state.GetTopFlow().iter]);
+        // Open flow
+        hw.OpenFlow(state, FlowType::LOOP, bof, eof, cur_mp, cur_ip);
+      }
+    }
+
+
+    // void Inst_Add__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Sub__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Mult__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Div__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Mod__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestNumEqu__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestNumNEqu__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestNumLess__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestNumLessTEqu__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestNumGreater__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestNumGreaterTEqu__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Floor__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Not__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Inc__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Dec__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_CopyMem__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_SwapMem__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Input__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Output__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_CommitGlobal__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_PullGlobal__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestMemEqu__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_TestMemNEqu__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_If__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_IfNot__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_While__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Countdown__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
+    // void Inst_Foreach__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst);
     
 
   };
