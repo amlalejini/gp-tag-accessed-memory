@@ -13,6 +13,7 @@ EMP_BUILD_CONFIG(ProgramSynthesisConfig,
   VALUE(BENCHMARK_DATA_DIR, std::string, "../data/prog-synth-examples", "Location to look for problem test case data."),
 
   GROUP(PROGRAM_GROUP, "General settings specific to programs."),
+  VALUE(USE_MODULES, bool, false, "Allow modules?"),
   VALUE(MIN_PROG_SIZE, size_t, 1, "Minimum program size"),
   VALUE(MAX_PROG_SIZE, size_t, 128, "Maximum program size"),
   VALUE(PROG_EVAL_TIME, size_t, 256, "How many clock cycles should we give a program during a test?"),
@@ -28,6 +29,10 @@ EMP_BUILD_CONFIG(ProgramSynthesisConfig,
   GROUP(HARDWARE_GROUP, "Settings specific to TagLGP virtual hardware"),
   VALUE(MIN_TAG_SPECIFICITY, double, 0.0, "What is the minimum tag similarity required for a tag to successfully reference another tag?"),
   VALUE(MAX_CALL_DEPTH, size_t, 128, "Maximum depth of hardware's call stack."),
+
+  GROUP(SELECTION_GROUP, "Setting specific to selection"),
+  VALUE(LEXICASE_MAX_FUNS, size_t, 0, "Max functions for lexicase selection"),
+
 )
 
 #endif

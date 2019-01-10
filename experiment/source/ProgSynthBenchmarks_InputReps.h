@@ -135,47 +135,7 @@ using Problem_Syllables_input_t = std::string;
 using Problem_Syllables_output_t = std::string;
 
 
-// ================ Problem mutators ================
 
-// Problem_NumberIO_input_t = std::pair<int, double>;
-struct Pair_IntDouble_Mutator {
-  int MIN_INT;
-  int MAX_INT;
-
-  double MIN_DOUBLE;
-  double MAX_DOUBLE;
-
-  double PER_INT_RATE;
-  double PER_DOUBLE_RATE;
-
-  size_t Mutate(emp::Random & rnd, std::pair<int, double> & mut_pair) {
-    size_t muts = 0;
-    if (rnd.P(PER_INT_RATE)) {
-      mut_pair.first = rnd.GetInt(MIN_INT, MAX_INT+1);
-      ++muts;
-    }
-    if (rnd.P(PER_DOUBLE_RATE)) {
-      mut_pair.second = rnd.GetDouble(MIN_DOUBLE, MAX_DOUBLE);
-      ++muts;
-    }
-    return muts;
-  }
-};
-
-struct Int_Mutator {
-  int MIN_INT;
-  int MAX_INT;
-
-  double PER_INT_RATE;
-
-  size_t Mutate(emp::Random & rnd, int & mut_int) {
-    if (rnd.P(PER_INT_RATE)) {
-      mut_int = rnd.GetInt(MIN_INT, MAX_INT+1);
-      return 1;
-    }
-    return 0;
-  }
-};
 
 // ================ Problem Organism Classes ================
 
@@ -250,64 +210,6 @@ Problem_NumberIO_output_t GenCorrectOut_NumberIO(const Problem_NumberIO_input_t 
   return input.first + input.second;
 }
 
-void SetCorrectOut_NumberIO(const Problem_NumberIO_input_t & input, Problem_NumberIO_output_t & output) {
-  output = input.first + input.second;
-}
-
-/// Calculate pass/fail score on NumberIO problem.
-std::pair<double, bool> CalcScorePassFail_NumberIO(const Problem_NumberIO_output_t & correct_test_output, double sub) {
-  const bool pass = (double)sub == correct_test_output;
-  return {(double)pass, pass};
-}
-
-std::pair<double, bool> CalcScoreGradient_NumberIO(const Problem_NumberIO_output_t & correct_test_output, double sub, double MAX_ERROR) {
-  // If output is correct, return a score of 1.0 and mark that submission passes.
-  if (correct_test_output == sub) {
-    return {1.0, true}; 
-  } else { // Otherwise, return {score=[0:1], false}
-    double error = emp::Abs(correct_test_output - sub);
-    emp_assert(error != 0, "Error shouldn't equal zero here");
-    double score = (error <= MAX_ERROR) ? 1 - (error/MAX_ERROR) : 0;
-    return {score, false};
-  }  
-}
-
-/// ProblemOrg: NumberIO
-/// NumberIO: Pair<integer, float>
-class TestOrg_NumberIO : public TestOrg_Base {
-  public:
-    using parent_t = TestOrg_Base;
-    using parent_t::phenotype;
-
-    using genome_t = Problem_NumberIO_input_t;
-    using out_t = Problem_NumberIO_output_t;
-
-  protected:
-    genome_t genome;
-    out_t out;
-  
-  public:
-    TestOrg_NumberIO(const genome_t & _g) : genome(_g), out() { ; }
-
-    genome_t & GetGenome() { return genome; }
-    const genome_t & GetGenome() const { return genome; }
-
-    out_t & GetCorrectOut() { return out; }
-    const out_t & GetCorrectOut() const { return out; }
-
-    // std::pair<int, double>;
-    int GetTestIntegerInput() const { return genome.first; }
-    double GetTestDoubleInput() const { return genome.second; }
-
-    void SetOut(const out_t & _out) { out = _out; }
-
-    void CalcOut() { SetCorrectOut_NumberIO(genome, out); }
-
-    void Print(std::ostream & os=std::cout) const {
-      os << genome.first << "," << genome.second;
-    }
-};
-
 struct ProblemUtilities_NumberIO {
   using input_t = Problem_NumberIO_input_t;
   using output_t = Problem_NumberIO_output_t;
@@ -317,28 +219,18 @@ struct ProblemUtilities_NumberIO {
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
-  emp::vector<emp::Ptr<TestOrg_NumberIO>> testingset_pop;
-
-  emp::vector<emp::vector<output_t>> population_validation_outputs;
-
   // A few useful things for use within a test evaluation
-  emp::Ptr<TestOrg_NumberIO> cur_eval_test_org;
   bool submitted;
   double submitted_val; // if going to do string thing, we can have a submission_str.
-
-  Pair_IntDouble_Mutator mutator;
-
-  emp::vector<std::function<double(TestOrg_NumberIO &)>> lexicase_fit_set;
+  double MAX_ERROR;
 
   ProblemUtilities_NumberIO() 
     : testing_set(ProblemUtilities_NumberIO::LoadTestCaseFromLine),
       training_set(ProblemUtilities_NumberIO::LoadTestCaseFromLine),
-      submitted(false), submitted_val(0.0)
+      submitted(false), submitted_val(0.0), MAX_ERROR(1)
   { ; }
 
-  ~ProblemUtilities_NumberIO() {
-    for (size_t i = 0; i < testingset_pop.size(); ++i) testingset_pop[i].Delete();
-  }
+  ~ProblemUtilities_NumberIO() { ; }
 
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
@@ -363,11 +255,23 @@ struct ProblemUtilities_NumberIO {
     return {input, output};
   }
 
-  void GenerateTestingSetPop() {
-    for (size_t i = 0; i < testing_set.GetSize(); ++i) {
-      testingset_pop.emplace_back(emp::NewPtr<TestOrg_NumberIO>(testing_set.GetInput(i)));
-      testingset_pop[i]->CalcOut();
-    }
+  /// Calculate pass/fail score on NumberIO problem.
+  std::pair<double, bool> CalcScorePassFail(const Problem_NumberIO_output_t & correct_test_output, double sub) {
+    const bool pass = (double)sub == correct_test_output;
+    return {(double)pass, pass};
+  }
+
+  std::pair<double, bool> CalcScoreGradient(const Problem_NumberIO_output_t & correct_test_output, double sub) {
+    emp_assert(MAX_ERROR != 0);
+    // If output is correct, return a score of 1.0 and mark that submission passes.
+    if (correct_test_output == sub) {
+      return {1.0, true}; 
+    } else { // Otherwise, return {score=[0:1], false}
+      double error = emp::Abs(correct_test_output - sub);
+      emp_assert(error != 0, "Error shouldn't equal zero here");
+      double score = (error <= MAX_ERROR) ? 1 - (error/MAX_ERROR) : 0;
+      return {score, false};
+    }  
   }
 
   void PrintTestCSV(std::ostream & os, const input_t & in) const {
@@ -448,9 +352,6 @@ struct ProblemUtilities_SmallOrLarge {
   emp::Ptr<problem_org_t> cur_eval_test_org;
   bool submitted;
   std::string submitted_str;
-
-  // Mutation
-  Int_Mutator mutator;
 
   // Selection
   emp::vector<std::function<double(problem_org_t &)>> lexicase_fit_set;

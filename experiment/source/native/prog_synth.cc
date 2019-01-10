@@ -28,6 +28,6 @@ int main(int argc, char* argv[])
 
   ProgramSynthesisExperiment e;
   e.Setup(config);
-  // e.Run();
+  e.Run();
 
 }
