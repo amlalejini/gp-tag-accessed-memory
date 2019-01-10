@@ -174,21 +174,20 @@ struct ProblemInfo {
 
 // Map of problem name to problem information.
 std::unordered_map<std::string, ProblemInfo> problems = {
-  {"number-io", {PROBLEM_ID::NumberIO, "training-examples-number-io.csv", "testing-examples-number-io.csv"}}
-  // {"small-or-large", {PROBLEM_ID::SmallOrLarge, "training-examples-small-or-large.csv", "testing-examples-small-or-large.csv"}},
-  // {"for-loop-index", {PROBLEM_ID::ForLoopIndex, "training-examples-for-loop-index.csv", "testing-examples-for-loop-index.csv"}},
-  // {"compare-string-lengths", {PROBLEM_ID::CompareStringLengths, "training-examples-compare-string-lengths.csv", "testing-examples-compare-string-lengths.csv"}},
-  // {"collatz-numbers", {PROBLEM_ID::CollatzNumbers, "training-examples-collatz-numbers.csv", "testing-examples-collatz-numbers.csv"}},
+  {"number-io", {PROBLEM_ID::NumberIO, "training-examples-number-io.csv", "testing-examples-number-io.csv"}},
+  {"small-or-large", {PROBLEM_ID::SmallOrLarge, "training-examples-small-or-large.csv", "testing-examples-small-or-large.csv"}},
+  {"for-loop-index", {PROBLEM_ID::ForLoopIndex, "training-examples-for-loop-index.csv", "testing-examples-for-loop-index.csv"}},
+  {"compare-string-lengths", {PROBLEM_ID::CompareStringLengths, "training-examples-compare-string-lengths.csv", "testing-examples-compare-string-lengths.csv"}},
   // {"string-lengths-backwards", {PROBLEM_ID::StringLengthsBackwards, "training-examples-string-lengths-backwards.csv", "testing-examples-string-lengths-backwards.csv"}},
-  // {"last-index-of-zero", {PROBLEM_ID::LastIndexOfZero, "training-examples-last-index-of-zero.csv", "testing-examples-last-index-of-zero.csv"}},
+  {"last-index-of-zero", {PROBLEM_ID::LastIndexOfZero, "training-examples-last-index-of-zero.csv", "testing-examples-last-index-of-zero.csv"}},
   // {"count-odds", {PROBLEM_ID::CountOdds, "training-examples-count-odds.csv", "testing-examples-count-odds.csv"}},
-  // {"mirror-image", {PROBLEM_ID::MirrorImage, "training-examples-mirror-image.csv", "testing-examples-mirror-image.csv"}},
-  // {"vectors-summed", {PROBLEM_ID::VectorsSummed, "training-examples-vectors-summed.csv", "testing-examples-vectors-summed.csv"}},
-  // {"sum-of-squares", {PROBLEM_ID::SumOfSquares, "training-examples-sum-of-squares.csv", "testing-examples-sum-of-squares.csv"}},
+  {"mirror-image", {PROBLEM_ID::MirrorImage, "training-examples-mirror-image.csv", "testing-examples-mirror-image.csv"}},
+  {"vectors-summed", {PROBLEM_ID::VectorsSummed, "training-examples-vectors-summed.csv", "testing-examples-vectors-summed.csv"}},
+  {"sum-of-squares", {PROBLEM_ID::SumOfSquares, "training-examples-sum-of-squares.csv", "testing-examples-sum-of-squares.csv"}},
   // {"vector-average", {PROBLEM_ID::VectorAverage, "training-examples-vector-average.csv", "testing-examples-vector-average.csv"}},
-  // {"median", {PROBLEM_ID::Median, "training-examples-median.csv", "testing-examples-median.csv"}},
-  // {"smallest", {PROBLEM_ID::Smallest, "training-examples-smallest.csv", "testing-examples-smallest.csv"}},
-  // {"grade", {PROBLEM_ID::Grade, "training-examples-grade.csv", "testing-examples-grade.csv"}}
+  {"median", {PROBLEM_ID::Median, "training-examples-median.csv", "testing-examples-median.csv"}},
+  {"smallest", {PROBLEM_ID::Smallest, "training-examples-smallest.csv", "testing-examples-smallest.csv"}},
+  {"grade", {PROBLEM_ID::Grade, "training-examples-grade.csv", "testing-examples-grade.csv"}}
 };
 
 class ProgramSynthesisExperiment {
@@ -269,30 +268,30 @@ private:
   ProblemUtilities_SmallOrLarge prob_utils_SmallOrLarge;
   ProblemUtilities_ForLoopIndex prob_utils_ForLoopIndex;
   ProblemUtilities_CompareStringLengths prob_utils_CompareStringLengths;
-  ProblemUtilities_DoubleLetters prob_utils_DoubleLetters;
-  ProblemUtilities_CollatzNumbers prob_utils_CollatzNumbers;
-  ProblemUtilities_ReplaceSpaceWithNewline prob_utils_ReplaceSpaceWithNewline;
-  ProblemUtilities_StringDifferences prob_utils_StringDifferences;
-  ProblemUtilities_EvenSquares prob_utils_EvenSquares;
-  ProblemUtilities_WallisPi prob_utils_WallisPi;
-  ProblemUtilities_StringLengthsBackwards prob_utils_StringLengthsBackwards;
+  // ProblemUtilities_DoubleLetters prob_utils_DoubleLetters;
+  // ProblemUtilities_CollatzNumbers prob_utils_CollatzNumbers;
+  // ProblemUtilities_ReplaceSpaceWithNewline prob_utils_ReplaceSpaceWithNewline;
+  // ProblemUtilities_StringDifferences prob_utils_StringDifferences;
+  // ProblemUtilities_EvenSquares prob_utils_EvenSquares;
+  // ProblemUtilities_WallisPi prob_utils_WallisPi;
+  // ProblemUtilities_StringLengthsBackwards prob_utils_StringLengthsBackwards;
   ProblemUtilities_LastIndexOfZero prob_utils_LastIndexOfZero;
-  ProblemUtilities_VectorAverage prob_utils_VectorAverage;
-  ProblemUtilities_CountOdds prob_utils_CountOdds;
+  // ProblemUtilities_VectorAverage prob_utils_VectorAverage;
+  // ProblemUtilities_CountOdds prob_utils_CountOdds;
   ProblemUtilities_MirrorImage prob_utils_MirrorImage;
-  ProblemUtilities_SuperAnagrams prob_utils_SuperAnagrams;
+  // ProblemUtilities_SuperAnagrams prob_utils_SuperAnagrams;
   ProblemUtilities_SumOfSquares prob_utils_SumOfSquares;
   ProblemUtilities_VectorsSummed prob_utils_VectorsSummed;
-  ProblemUtilities_XWordLines prob_utils_XWordLines;
-  ProblemUtilities_PigLatin prob_utils_PigLatin;
-  ProblemUtilities_NegativeToZero prob_utils_NegativeToZero;
-  ProblemUtilities_ScrabbleScore prob_utils_ScrabbleScore;
-  ProblemUtilities_Checksum prob_utils_Checksum;
-  ProblemUtilities_Digits prob_utils_Digits;
+  // ProblemUtilities_XWordLines prob_utils_XWordLines;
+  // ProblemUtilities_PigLatin prob_utils_PigLatin;
+  // ProblemUtilities_NegativeToZero prob_utils_NegativeToZero;
+  // ProblemUtilities_ScrabbleScore prob_utils_ScrabbleScore;
+  // ProblemUtilities_Checksum prob_utils_Checksum;
+  // ProblemUtilities_Digits prob_utils_Digits;
   ProblemUtilities_Grade prob_utils_Grade;
   ProblemUtilities_Median prob_utils_Median;
   ProblemUtilities_Smallest prob_utils_Smallest;
-  ProblemUtilities_Syllables prob_utils_Syllables;
+  // ProblemUtilities_Syllables prob_utils_Syllables;
 
   emp::Ptr<emp::DataFile> solution_file;
   
@@ -1333,7 +1332,6 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
       // Set hardware inputs.
       wmem.Set(0, input.first);
       wmem.Set(1, input.second);
-
     }
   });
 
@@ -1384,19 +1382,167 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
       break;
     }
   }
-  
-
-
 }
 
 void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: SmallOrLarge." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_SmallOrLarge::input_t;
+  using prob_output_t = typename ProblemUtilities_SmallOrLarge::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_SmallOrLarge.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_SmallOrLarge.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_SmallOrLarge.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_SmallOrLarge.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_SmallOrLarge.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_SmallOrLarge.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_SmallOrLarge.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_SmallOrLarge.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_SmallOrLarge.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_SmallOrLarge.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_SmallOrLarge.CalcScorePassFail(correct_output, prob_utils_SmallOrLarge.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // TODO
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+     break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+     break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
+
 }
 
 void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: ForLoopIndex." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_ForLoopIndex::input_t;
+  using prob_output_t = typename ProblemUtilities_ForLoopIndex::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_ForLoopIndex.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_ForLoopIndex.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_ForLoopIndex.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_ForLoopIndex.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_ForLoopIndex.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 3);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_ForLoopIndex.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_ForLoopIndex.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input[0]);
+      wmem.Set(1, input[1]);
+      wmem.Set(2, input[2]);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_ForLoopIndex.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_ForLoopIndex.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_ForLoopIndex.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_ForLoopIndex.CalcScoreGradient(correct_output, prob_utils_ForLoopIndex.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_CompareStringLengths() {
