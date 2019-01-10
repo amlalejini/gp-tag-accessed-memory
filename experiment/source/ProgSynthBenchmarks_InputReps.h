@@ -234,6 +234,15 @@ struct ProblemUtilities_NumberIO {
 
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
+  
+  input_t & GetTestInput(bool training, size_t id) { 
+    if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
+    else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
+  }
+  output_t & GetTestOutput(bool training, size_t id) {
+    if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetOutput(id); }
+    else { emp_assert(id < testing_set.GetSize()); return testing_set.GetOutput(id); }
+  }
 
   void ResetTestEval() {
     submitted = false;

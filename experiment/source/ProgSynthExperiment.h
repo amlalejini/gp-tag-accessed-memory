@@ -409,6 +409,15 @@ private:
     return true;
   }
 
+  // Problem-specific instructions
+  void Inst_LoadInt_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadDouble_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+
+  void Inst_LoadInt_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadDouble_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+
 public:
 
   ProgramSynthesisExperiment()
@@ -507,6 +516,10 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
   // Setup program selection.
   std::cout << "==== EXPERIMENT SETUP => selection ====" << std::endl;
   SetupSelection(); 
+
+  // Setup program mutation.
+  std::cout << "==== EXPERIMENT SETUP => mutation ====" << std::endl;
+  SetupMutation();
   
   // Setup program fitness calculations.
   std::cout << "==== EXPERIMENT SETUP => world fitness function (not used by lexicase selection) ====" << std::endl;
@@ -1155,7 +1168,31 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
   AddNumericTerminals(0, 16);
 
   // todo - add load and submit instructions (all types)
-  
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadDouble-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__TAG_ARGS(hw, inst); }, 1);
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadDouble-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadDouble-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__TAG_ARGS(hw, inst); }, 1);
+
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadDouble-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      break;
+    }
+  }
+  // todo - print instruction set!
 }
 
 void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {
@@ -1293,6 +1330,78 @@ void ProgramSynthesisExperiment::SetupProblem_Syllables() {
   exit(-1);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Instruction implementations
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+// Number-io
+void ProgramSynthesisExperiment::Inst_LoadInt_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst) {
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_NumberIO.GetTestInput(eval_util.use_training_set, eval_util.current_testID).first);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadDouble_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst) {
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_NumberIO.GetTestInput(eval_util.use_training_set, eval_util.current_testID).second);
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitNum_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst) {
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), hardware_t::MemPosType::NUM);
+  if (!hw.IsValidMemPos(posA)) return;
+
+  prob_utils_NumberIO.Submit(wmem.AccessVal(posA).GetNum());
+}
+
+void ProgramSynthesisExperiment::Inst_LoadInt_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_NumberIO.GetTestInput(eval_util.use_training_set, eval_util.current_testID).first);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadDouble_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_NumberIO.GetTestInput(eval_util.use_training_set, eval_util.current_testID).second);
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitNum_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, hardware_t::MemPosType::NUM)) return;
+
+  prob_utils_NumberIO.Submit(wmem.AccessVal(posA).GetNum());
+}
+////////////////////////////////////////////////////////////////////////////////
 
 
 #endif
