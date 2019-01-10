@@ -33,6 +33,10 @@ EMP_BUILD_CONFIG(ProgramSynthesisConfig,
   GROUP(SELECTION_GROUP, "Setting specific to selection"),
   VALUE(LEXICASE_MAX_FUNS, size_t, 0, "Max functions for lexicase selection"),
 
+  GROUP(DATA_COLLECTION_GROUP, "Settings specific to data collection."),
+  VALUE(DATA_DIRECTORY, std::string, "./output", "Where should we dump output files?"),
+  VALUE(SNAPSHOT_INTERVAL, size_t, 1000, "How often should we take population snapshots?"),
+  VALUE(SUMMARY_STATS_INTERVAL, size_t, 1000, "How often should we output summary stats?"),
 )
 
 #endif

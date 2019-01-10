@@ -233,6 +233,10 @@ private:
 
   size_t LEXICASE_MAX_FUNS;
 
+  std::string DATA_DIRECTORY;
+  size_t SNAPSHOT_INTERVAL;
+  size_t SUMMARY_STATS_INTERVAL;
+
   // Experiment variables
   size_t TRAINING_SET_SIZE;
   size_t TESTING_SET_SIZE;
@@ -307,6 +311,50 @@ private:
     size_t current_testID;
     bool use_training_set;
 
+    struct TestingSetPhenotype {
+      emp::vector<double> test_scores;
+      double total_score;
+      
+      emp::vector<bool> test_passes;
+      size_t num_passes;
+      size_t num_fails;
+
+      size_t total_submissions;
+
+      void Reset(size_t s=0) {
+        // test_results.clear();
+        // test_results.resize(s, 0);
+
+        test_scores.clear();
+        test_scores.resize(s, 0);
+        total_score = 0;
+        
+        test_passes.clear();
+        test_passes.resize(s, false);
+        num_passes = 0;
+        num_fails = 0;
+
+        total_submissions = 0;
+      }
+
+      void RecordScore(size_t id, double val) {
+        emp_assert(id < test_scores.size());
+        total_score += val;
+        test_scores[id] = val;
+      }
+
+      void RecordPass(size_t id, bool pass) {
+        emp_assert(id < test_passes.size());
+        if (pass) ++num_passes;
+        else ++num_fails;
+        test_passes[id] = pass;
+      }
+
+      void RecordSubmission(bool sub) {
+        total_submissions += (size_t)sub;
+      }
+    } testingset_phenotype;
+
     EvalUtil(size_t pID=0, size_t tID=0) : current_programID(pID), current_testID(tID), use_training_set(true) { ; }
   } eval_util;
 
@@ -314,6 +362,8 @@ private:
   emp::Signal<void(void)> do_evaluation_sig;
   emp::Signal<void(void)> do_selection_sig;
   emp::Signal<void(void)> do_update_sig;  
+
+  emp::Signal<void(void)> do_pop_snapshot_sig;
 
   emp::Signal<void(void)> end_setup_sig;
 
@@ -327,14 +377,36 @@ private:
 
   emp::Signal<void(prog_org_t &)> do_program_advance;   ///< Advance virtual hardware by one time step.
 
-  // std::function<void(prog_org_t &)> ValidateProgram
-
   std::function<TestResult(prog_org_t &)> CalcProgramResultOnTest; ///< Evaluate given program on given training case.
+
+  // Program stats collectors
+  struct ProgramStatsCollectors {
+    // General
+    std::function<size_t(void)> get_id;
+    // Fitness evaluation stats
+    std::function<double(void)> get_fitness;
+    std::function<double(void)> get_fitness_eval__total_score;          
+    std::function<size_t(void)> get_fitness_eval__num_passes;           
+    std::function<size_t(void)> get_fitness_eval__num_fails;            
+    std::function<size_t(void)> get_fitness_eval__num_tests;            
+    std::function<std::string(void)> get_fitness_eval__passes_by_test;
+
+    std::function<size_t(void)> get_testingset_eval__num_passes;          // - get_validation_eval__num_passes;
+    std::function<size_t(void)> get_testingset_eval__num_tests;           // - get_validation_eval__num_tests
+    std::function<std::string(void)> get_testingset_eval__passes_by_test; // - get_validation_eval__passes_by_test
+
+    std::function<size_t(void)> get_program_len;
+    std::function<std::string(void)> get_program;
+    
+  } program_stats;
+  std::function<size_t(void)> get_update;
   
   // Internal functions
   void InitConfigs(const ProgramSynthesisConfig & config);
   
   void InitProgPop_Random();
+
+  void SnapshotPrograms();
 
   void AddDefaultInstructions();
   void AddDefaultInstructions_TagArgs();
@@ -407,6 +479,29 @@ private:
     }
     end_program_eval.Trigger(prog_org);
     return true;
+  }
+
+  void DoTestingSetValidation(prog_org_t & prog_org) {
+    eval_util.use_training_set = false;
+    begin_program_eval.Trigger(prog_org);
+    eval_util.testingset_phenotype.Reset(TESTING_SET_SIZE); // Reset eval phenotype
+    for (eval_util.current_testID = 0; eval_util.current_testID < TESTING_SET_SIZE; ++eval_util.current_testID) {
+      begin_program_test.Trigger(prog_org);
+      do_program_test.Trigger(prog_org);
+      end_program_test.Trigger(prog_org);
+      TestResult result = CalcProgramResultOnTest(prog_org);
+      // Update eval phenotype
+      eval_util.testingset_phenotype.RecordScore(eval_util.current_testID, result.score);
+      eval_util.testingset_phenotype.RecordPass(eval_util.current_testID, result.pass);
+      eval_util.testingset_phenotype.RecordSubmission(result.sub);
+    }
+    end_program_eval.Trigger(prog_org);
+  }
+
+  void PrintInstructionSet() {
+    std::cout << "=========== Instruction Set ===========" << std::endl;
+    inst_lib->Print();
+    std::cout << "=======================================" << std::endl;
   }
 
   // Problem-specific instructions
@@ -494,7 +589,7 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
     std::cout << "solution found? " << solution_found << "; ";
     std::cout << "smallest solution? " << smallest_prog_solution_size << std::endl;
 
-    // if (update % SNAPSHOT_INTERVAL == 0 || update == GENERATIONS) do_pop_snapshot_sig.Trigger(); 
+    if (update % SNAPSHOT_INTERVAL == 0 || update == GENERATIONS) do_pop_snapshot_sig.Trigger(); 
 
     prog_world->Update();
     prog_world->ClearCache();
@@ -508,6 +603,7 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
   // we setup depends on experiment configuration.
   std::cout << "==== EXPERIMENT SETUP => problem ====" << std::endl;
   SetupProblem();
+  PrintInstructionSet();
 
   // Setup program evaluation.
   std::cout << "==== EXPERIMENT SETUP => evaluation ====" << std::endl;
@@ -714,7 +810,7 @@ void ProgramSynthesisExperiment::SetupEvaluation() {
           if (!solution_found) { update_first_solution_found = prog_world->GetUpdate(); }
           solution_found = true;
           smallest_prog_solution_size = prog_org.GetGenome().GetSize();
-          // todo -> update solutions file!
+          solution_file->Update();
         }
       }
     }
@@ -799,7 +895,64 @@ void ProgramSynthesisExperiment::SetupMutation() {
 }
 
 void ProgramSynthesisExperiment::SetupDataCollection() {
-  std::cout << "Todo!" << std::endl;
+  std::cout << "Setting up data collection." << std::endl;
+  // Make a directory.
+  mkdir(DATA_DIRECTORY.c_str(), ACCESSPERMS);
+  if (DATA_DIRECTORY.back() != '/') DATA_DIRECTORY += '/';
+
+  // Setup stats collectors.
+  // NOTE - these functions make ALL sorts of assumptions about when they'll be called.
+  program_stats.get_id = [this]() { return eval_util.current_programID; };
+  program_stats.get_fitness = [this]() { return prog_world->CalcFitnessID(eval_util.current_programID);  };
+  program_stats.get_fitness_eval__total_score = [this]() { return prog_world->GetOrg(eval_util.current_programID).GetPhenotype().total_score; };
+  program_stats.get_fitness_eval__num_passes = [this]() { return prog_world->GetOrg(eval_util.current_programID).GetPhenotype().num_passes; };
+  program_stats.get_fitness_eval__num_fails = [this]() { return prog_world->GetOrg(eval_util.current_programID).GetPhenotype().num_fails; };
+  program_stats.get_fitness_eval__num_tests = [this]() { return prog_world->GetOrg(eval_util.current_programID).GetPhenotype().test_passes.size(); };
+  program_stats.get_fitness_eval__passes_by_test = [this]() { 
+    prog_org_t & prog = prog_world->GetOrg(eval_util.current_programID);
+    std::string scores = "\"[";
+    for (size_t i = 0; i < prog.GetPhenotype().test_passes.size(); ++i) {
+      if (i) scores += ",";
+      scores += emp::to_string((size_t)prog.GetPhenotype().test_passes[i]);
+    }
+    scores += "]\"";
+    return scores;
+  };
+  program_stats.get_testingset_eval__num_passes = [this]() { return eval_util.testingset_phenotype.num_passes; };
+  program_stats.get_testingset_eval__num_tests = [this]() { return eval_util.testingset_phenotype.test_passes.size(); };
+  program_stats.get_testingset_eval__passes_by_test = [this]() { 
+    std::string scores = "\"[";
+    for (size_t i = 0; i < eval_util.testingset_phenotype.test_passes.size(); ++i) {
+      if (i) scores += ",";
+      scores += emp::to_string(eval_util.testingset_phenotype.test_passes[i]);
+    }
+    scores += "]\"";
+    return scores; 
+  };
+  program_stats.get_program_len = [this]() { return prog_world->GetOrg(eval_util.current_programID).GetGenome().GetSize(); };
+  program_stats.get_program = [this]() { 
+    std::ostringstream stream;
+    prog_world->GetOrg(eval_util.current_programID).GetGenome().PrintCSVEntry(stream);
+    return stream.str();
+  };
+
+
+  get_update = [this]() { return prog_world->GetUpdate(); };
+
+  // Setup solution file.
+  solution_file = emp::NewPtr<emp::DataFile>(DATA_DIRECTORY + "/solutions.csv");
+  solution_file->AddFun(get_update, "update");
+  solution_file->AddFun(program_stats.get_id, "program_id");
+  solution_file->AddFun(program_stats.get_program_len, "program_len");
+  solution_file->AddFun(program_stats.get_program, "program");
+  solution_file->PrintHeaderKeys();
+
+  do_pop_snapshot_sig.AddAction([this]() {
+    SnapshotPrograms();
+  });
+
+  prog_world->SetupFitnessFile(DATA_DIRECTORY + "program_fitness.csv").SetTimingRepeat(SUMMARY_STATS_INTERVAL);
+  
 }
 
 
@@ -830,6 +983,10 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
 
   LEXICASE_MAX_FUNS = config.LEXICASE_MAX_FUNS();
 
+  DATA_DIRECTORY = config.DATA_DIRECTORY();
+  SNAPSHOT_INTERVAL = config.SNAPSHOT_INTERVAL();
+  SUMMARY_STATS_INTERVAL = config.SUMMARY_STATS_INTERVAL();
+
 }
 
 void ProgramSynthesisExperiment::InitProgPop_Random() {
@@ -853,6 +1010,41 @@ void ProgramSynthesisExperiment::InitProgPop_Random() {
         exit(-1); 
       }
     }
+  }
+}
+
+void ProgramSynthesisExperiment::SnapshotPrograms() {
+  std::string snapshot_dir = DATA_DIRECTORY + "pop_" + emp::to_string(prog_world->GetUpdate());
+  mkdir(snapshot_dir.c_str(), ACCESSPERMS);
+
+  emp::DataFile file(snapshot_dir + "/program_pop_" + emp::to_string((int)prog_world->GetUpdate()) + ".csv");
+
+  // Add functions to data file.
+  file.AddFun(program_stats.get_id, "program_id", "Program ID");
+  
+  file.AddFun(program_stats.get_fitness, "fitness");
+  file.AddFun(program_stats.get_fitness_eval__total_score, "total_score__fitness_eval");
+  file.AddFun(program_stats.get_fitness_eval__num_passes, "num_passes__fitness_eval");
+  file.AddFun(program_stats.get_fitness_eval__num_fails, "num_fails__fitness_eval");
+  file.AddFun(program_stats.get_fitness_eval__num_tests, "num_tests__fitness_eval");
+  file.AddFun(program_stats.get_fitness_eval__passes_by_test, "passes_by_test__fitness_eval");
+
+  file.AddFun(program_stats.get_testingset_eval__num_passes, "num_passes__testingset_eval");
+  file.AddFun(program_stats.get_testingset_eval__num_tests, "num_tests__testingset_eval");
+  file.AddFun(program_stats.get_testingset_eval__passes_by_test, "passes_by_test__testingset_eval");
+
+  file.AddFun(program_stats.get_program_len, "program_len");
+  file.AddFun(program_stats.get_program, "program");
+
+  file.PrintHeaderKeys();
+
+  // For each program in the population, dump the program and anything we want to know about it.
+  eval_util.use_training_set = false;
+  for (eval_util.current_programID = 0; eval_util.current_programID < prog_world->GetSize(); ++eval_util.current_programID) {
+    if (!prog_world->IsOccupied(eval_util.current_programID)) continue;
+    DoTestingSetValidation(prog_world->GetOrg(eval_util.current_programID)); // Do validation for program.
+    // Update snapshot file
+    file.Update();
   }
 }
 
@@ -1192,7 +1384,9 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
       break;
     }
   }
-  // todo - print instruction set!
+  
+
+
 }
 
 void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {

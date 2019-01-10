@@ -639,6 +639,11 @@ namespace TagLGP {
         program.emplace_back(id, args);
       }
 
+
+      void PushInst(size_t id, const tag_args_t & targs, const num_args_t & nargs) {
+        program.emplace_back(id, targs, nargs);
+      }
+
       /// Push new instruction to program by instruction name.
       void PushInst(const std::string & name, const tag_args_t & args) {
         emp_assert(inst_lib->IsInst(name), "Uknown instruction name", name);
@@ -649,6 +654,12 @@ namespace TagLGP {
       void PushInst(const std::string & name, const num_args_t & args) {
         emp_assert(inst_lib->IsInst(name), "Uknown instruction name", name);
         PushInst(inst_lib->GetID(name), args);
+      }
+
+      /// Push new instruction to program by instruction name.
+      void PushInst(const std::string & name, const tag_args_t & targs, const num_args_t & nargs) {
+        emp_assert(inst_lib->IsInst(name), "Uknown instruction name", name);
+        PushInst(inst_lib->GetID(name), targs, nargs);
       }
 
       /// Push given instruction onto program.
