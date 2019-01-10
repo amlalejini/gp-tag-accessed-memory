@@ -121,6 +121,10 @@ constexpr double PROB_NUMBER_IO__DOUBLE_MAX =  100.0;
 constexpr int PROB_NUMBER_IO__INT_MIN = -100;
 constexpr int PROB_NUMBER_IO__INT_MAX =  100;
 
+constexpr size_t PROB_LAST_INDEX_OF_ZERO__MAX_VEC_LEN = 50;
+
+constexpr int PROB_VECTORS_SUMMED__MAX_NUM = 1000;
+
 enum PROBLEM_ID { NumberIO=0,
                   SmallOrLarge,
                   ForLoopIndex,
@@ -503,14 +507,91 @@ private:
     std::cout << "=======================================" << std::endl;
   }
 
-  // Problem-specific instructions
+  // ------------ Problem-specific instructions ------------
+  
+  // -- Number IO --
+  // Tag-based args
   void Inst_LoadInt_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadDouble_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_SubmitNum_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-
+  // Numeric args
   void Inst_LoadInt_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadDouble_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_SubmitNum_NumberIO__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  
+  // -- SmallOrLarge --
+  // Tag-based args
+  void Inst_LoadInt_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitSmall_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitLarge_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNone_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  // Numeric args
+  void Inst_LoadInt_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitSmall_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitLarge_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNone_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+
+  // -- ForLoopIndex --
+  // Tag-based args
+  void Inst_LoadStart_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadStep_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  // Numeric args
+  void Inst_LoadStart_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadStep_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+
+  // -- Grade --
+  // Tag-based args
+  void Inst_LoadThreshA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadThreshB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadThreshC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadThreshD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadGrade_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitF_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  // Numeric args
+  void Inst_LoadThreshA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadThreshB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadThreshC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadThreshD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadGrade_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitF_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+
+  // -- Median --
+  // Tag-based args
+  void Inst_LoadNum1_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum2_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum3_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  // Numeric args
+  void Inst_LoadNum1_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum2_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum3_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+
+  // -- Smallest --
+  // Tag-based args
+  void Inst_LoadNum1_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum2_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum3_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum4_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst);
+  // Numeric args
+  void Inst_LoadNum1_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum2_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum3_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_LoadNum4_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNum_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst);
 
 public:
 
@@ -1546,8 +1627,84 @@ void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
 }
 
 void ProgramSynthesisExperiment::SetupProblem_CompareStringLengths() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: CompareStringLengths." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_CompareStringLengths::input_t;
+  using prob_output_t = typename ProblemUtilities_CompareStringLengths::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_CompareStringLengths.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_CompareStringLengths.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_CompareStringLengths.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_CompareStringLengths.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_CompareStringLengths.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 3);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_CompareStringLengths.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_CompareStringLengths.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input[0]);
+      wmem.Set(1, input[1]);
+      wmem.Set(2, input[2]);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_CompareStringLengths.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_CompareStringLengths.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_CompareStringLengths.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_CompareStringLengths.CalcScorePassFail(correct_output, prob_utils_CompareStringLengths.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_DoubleLetters() {
@@ -1586,8 +1743,84 @@ void ProgramSynthesisExperiment::SetupProblem_StringLengthsBackwards() {
 }
 
 void ProgramSynthesisExperiment::SetupProblem_LastIndexOfZero() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: LastIndexOfZero." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_LastIndexOfZero::input_t;
+  using prob_output_t = typename ProblemUtilities_LastIndexOfZero::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+
+  prob_utils_LastIndexOfZero.MAX_ERROR = PROB_LAST_INDEX_OF_ZERO__MAX_VEC_LEN;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_LastIndexOfZero.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_LastIndexOfZero.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_LastIndexOfZero.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_LastIndexOfZero.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_LastIndexOfZero.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_LastIndexOfZero.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_LastIndexOfZero.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_LastIndexOfZero.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_LastIndexOfZero.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_LastIndexOfZero.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_LastIndexOfZero.CalcScoreGradient(correct_output, prob_utils_LastIndexOfZero.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_VectorAverage() {
@@ -1601,8 +1834,83 @@ void ProgramSynthesisExperiment::SetupProblem_CountOdds() {
 }
 
 void ProgramSynthesisExperiment::SetupProblem_MirrorImage() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: MirrorImage." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_MirrorImage::input_t;
+  using prob_output_t = typename ProblemUtilities_MirrorImage::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_MirrorImage.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_MirrorImage.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_MirrorImage.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_MirrorImage.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_MirrorImage.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_MirrorImage.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_MirrorImage.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input[0]);
+      wmem.Set(1, input[1]);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_MirrorImage.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_MirrorImage.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_MirrorImage.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_MirrorImage.CalcScorePassFail(correct_output, prob_utils_MirrorImage.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_SuperAnagrams() {
@@ -1611,13 +1919,167 @@ void ProgramSynthesisExperiment::SetupProblem_SuperAnagrams() {
 }
 
 void ProgramSynthesisExperiment::SetupProblem_SumOfSquares() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: SumOfSquares." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_SumOfSquares::input_t;
+  using prob_output_t = typename ProblemUtilities_SumOfSquares::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_SumOfSquares.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_SumOfSquares.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_SumOfSquares.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_SumOfSquares.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_SumOfSquares.ResetTestEval();
+    prob_utils_SumOfSquares.MAX_ERROR = (int)(prob_utils_SumOfSquares.GetTestOutput(eval_util.use_training_set, eval_util.current_testID) * 0.5);
+    
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_SumOfSquares.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_SumOfSquares.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_SumOfSquares.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_SumOfSquares.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_SumOfSquares.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_SumOfSquares.CalcScoreGradient(correct_output, prob_utils_SumOfSquares.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_VectorsSummed() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: VectorsSummed." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_VectorsSummed::input_t;
+  using prob_output_t = typename ProblemUtilities_VectorsSummed::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+
+  prob_utils_VectorsSummed.MAX_NUM = PROB_VECTORS_SUMMED__MAX_NUM;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_VectorsSummed.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_VectorsSummed.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_VectorsSummed.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_VectorsSummed.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_VectorsSummed.ResetTestEval();
+    prob_utils_VectorsSummed.MAX_ERROR = (2*PROB_VECTORS_SUMMED__MAX_NUM) * prob_utils_VectorsSummed.GetTestOutput(eval_util.use_training_set, eval_util.current_testID).size();
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_VectorsSummed.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_VectorsSummed.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input[0]);
+      wmem.Set(1, input[1]);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_VectorsSummed.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_VectorsSummed.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_VectorsSummed.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_VectorsSummed.CalcScoreGradient(correct_output, prob_utils_VectorsSummed.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_XWordLines() {
@@ -1651,18 +2113,249 @@ void ProgramSynthesisExperiment::SetupProblem_Digits() {
 }
 
 void ProgramSynthesisExperiment::SetupProblem_Grade() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: Grade." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_Grade::input_t;
+  using prob_output_t = typename ProblemUtilities_Grade::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_Grade.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_Grade.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_Grade.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_Grade.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_Grade.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_Grade.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_Grade.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input[0]);
+      wmem.Set(1, input[1]);
+      wmem.Set(2, input[2]);
+      wmem.Set(3, input[3]);
+      wmem.Set(4, input[4]);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_Grade.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_Grade.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_Grade.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_Grade.CalcScorePassFail(correct_output, prob_utils_Grade.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_Median() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: Median." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_Median::input_t;
+  using prob_output_t = typename ProblemUtilities_Median::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_Median.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_Median.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_Median.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_Median.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_Median.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_Median.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_Median.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input[0]);
+      wmem.Set(1, input[1]);
+      wmem.Set(2, input[2]);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_Median.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_Median.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_Median.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_Median.CalcScorePassFail(correct_output, prob_utils_Median.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_Smallest() {
-  std::cout << "Problem setup is not yet implemented. Exiting." << std::endl;
+  std::cout << "Setting up problem: Smallest." << std::endl;
+
+  using prob_input_t = typename ProblemUtilities_Smallest::input_t;
+  using prob_output_t = typename ProblemUtilities_Smallest::output_t;
+  using testcase_set_t = TestCaseSet<prob_input_t,prob_output_t>;
+ 
+  // Load training and testing examples from file.
+  if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
+  std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
+  std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
+  prob_utils_Smallest.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_Smallest.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  TRAINING_SET_SIZE = prob_utils_Smallest.GetTrainingSet().GetSize();
+  TESTING_SET_SIZE = prob_utils_Smallest.GetTestingSet().GetSize();
+  std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
+  std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+
+  // Tell experiment how to configure hardware inputs when running a program against a test.
+  begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // Reset evaluation utilities.
+    prob_utils_Smallest.ResetTestEval();
+    emp_assert(eval_hardware->GetMemSize() >= 1);
+    // Configure inputs.
+    if (eval_hardware->GetCallStackSize()) {
+      
+      // Are we using the training set or testing set?
+      emp::Ptr<testcase_set_t> test_set_ptr;
+      if (eval_util.use_training_set) test_set_ptr = &prob_utils_Smallest.training_set; // todo - confirm this is okay
+      else test_set_ptr = &prob_utils_Smallest.testing_set;
+
+      emp_assert(eval_util.current_testID < test_set_ptr->GetSize());
+      prob_input_t & input = test_set_ptr->GetInput(eval_util.current_testID);
+      hardware_t::CallState & state = eval_hardware->GetCurCallState();
+      hardware_t::Memory & wmem = state.GetWorkingMem();
+
+      // Set hardware inputs.
+      wmem.Set(0, input[0]);
+      wmem.Set(1, input[1]);
+      wmem.Set(2, input[2]);
+      wmem.Set(3, input[3]);
+    }
+  });
+
+  // Tell the experiment how to calculate test results.
+  CalcProgramResultOnTest = [this](prog_org_t & prog_org) {
+    // Are we using the training set or testing set?
+    emp::Ptr<testcase_set_t> test_set_ptr;
+    if (eval_util.use_training_set) test_set_ptr = &prob_utils_Smallest.training_set; // todo - confirm this is okay
+    else test_set_ptr = &prob_utils_Smallest.testing_set;
+
+    prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
+    
+    TestResult result;
+    if (!prob_utils_Smallest.submitted) {
+      result.score = 0; result.pass = false; result.sub = false;
+    } else {
+      std::pair<double, bool> r(prob_utils_Smallest.CalcScorePassFail(correct_output, prob_utils_Smallest.submitted_val));
+      result.score = r.first; result.pass = r.second; result.sub = true;
+    }
+    return result;
+  };
+
+  // Add problem-specific instructions. (Terminals)
+  AddNumericTerminals(0, 16);
+
+  // todo
+  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
+  switch (PROGRAM_ARGUMENT_MODE) {
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      break;
+    }
+    case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      break;
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SetupProblem_Syllables() {
@@ -1676,6 +2369,7 @@ void ProgramSynthesisExperiment::SetupProblem_Syllables() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Number-io
+////////////////////////////////////////////////////////////////////////////////
 void ProgramSynthesisExperiment::Inst_LoadInt_NumberIO__TAG_ARGS(hardware_t & hw, const inst_t & inst) {
   hardware_t::CallState & state = hw.GetCurCallState();
   hardware_t::Memory & wmem = state.GetWorkingMem();
@@ -1741,7 +2435,80 @@ void ProgramSynthesisExperiment::Inst_SubmitNum_NumberIO__NUM_ARGS(hardware_t & 
 
   prob_utils_NumberIO.Submit(wmem.AccessVal(posA).GetNum());
 }
+
 ////////////////////////////////////////////////////////////////////////////////
+// Small or large
+////////////////////////////////////////////////////////////////////////////////
+void ProgramSynthesisExperiment::Inst_LoadInt_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitSmall_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitLarge_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNone_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadInt_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitSmall_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitLarge_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNone_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+
+////////////////////////////////////////////////////////////////////////////////
+// For Loop Index
+////////////////////////////////////////////////////////////////////////////////
+void ProgramSynthesisExperiment::Inst_LoadStart_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadStep_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadStart_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadStep_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+
+////////////////////////////////////////////////////////////////////////////////
+// Grade
+////////////////////////////////////////////////////////////////////////////////
+void ProgramSynthesisExperiment::Inst_LoadThreshA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadThreshB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadThreshC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadThreshD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadGrade_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitF_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadThreshA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadThreshB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadThreshC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadThreshD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadGrade_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitF_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+
+////////////////////////////////////////////////////////////////////////////////
+// Median
+////////////////////////////////////////////////////////////////////////////////
+void ProgramSynthesisExperiment::Inst_LoadNum1_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum2_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum3_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNum_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum1_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum2_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum3_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNum_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+
+////////////////////////////////////////////////////////////////////////////////
+// Smallest
+////////////////////////////////////////////////////////////////////////////////
+void ProgramSynthesisExperiment::Inst_LoadNum1_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum2_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum3_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum4_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNum_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum1_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum2_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum3_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum4_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_SubmitNum_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
 
 
 #endif
