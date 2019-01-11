@@ -1385,8 +1385,8 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_NumberIO.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
-  prob_utils_NumberIO.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
+  prob_utils_NumberIO.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_NumberIO.GetTestingSet().LoadTestCases(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_NumberIO.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_NumberIO.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1476,8 +1476,8 @@ void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_SmallOrLarge.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
-  prob_utils_SmallOrLarge.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
+  prob_utils_SmallOrLarge.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_SmallOrLarge.GetTestingSet().LoadTestCases(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_SmallOrLarge.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_SmallOrLarge.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1558,8 +1558,8 @@ void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_ForLoopIndex.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
-  prob_utils_ForLoopIndex.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
+  prob_utils_ForLoopIndex.GetTrainingSet().LoadTestCases(training_examples_fpath);
+  prob_utils_ForLoopIndex.GetTestingSet().LoadTestCases(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_ForLoopIndex.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_ForLoopIndex.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
