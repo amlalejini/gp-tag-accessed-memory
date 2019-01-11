@@ -1281,7 +1281,8 @@ struct ProblemUtilities_Grade {
     input[2] = std::atof(line[2].c_str());
     input[3] = std::atof(line[3].c_str());
     input[4] = std::atof(line[4].c_str());
-
+    
+    // std::cout << "=== Loading test case from file ===" << std::endl;
     // std::cout << "A thresh: " << input[0] << std::endl;
     // std::cout << "B thresh: " << input[1] << std::endl;
     // std::cout << "C thresh: " << input[2] << std::endl;
@@ -1304,6 +1305,7 @@ struct ProblemUtilities_Grade {
     }
 
     output_t gen_out = GenCorrectOut_Grade(input);
+    // std::cout << "Output: " << gen_out << ", " << output << std::endl;
     emp_assert(gen_out == output);
 
     emp_assert(100 >= input[0]);

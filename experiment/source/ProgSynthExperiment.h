@@ -522,14 +522,12 @@ private:
   // -- SmallOrLarge --
   // Tag-based args
   void Inst_LoadInt_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitSmall_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitLarge_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitNone_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst);
   // Numeric args
   void Inst_LoadInt_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitSmall_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitLarge_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitNone_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  // No args
+  void Inst_SubmitSmall_SmallOrLarge(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitLarge_SmallOrLarge(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitNone_SmallOrLarge(hardware_t & hw, const inst_t & inst);
 
   // -- ForLoopIndex --
   // Tag-based args
@@ -550,22 +548,18 @@ private:
   void Inst_LoadThreshC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadThreshD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadGrade_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitF_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst);
   // Numeric args
   void Inst_LoadThreshA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadThreshB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadThreshC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadThreshD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
   void Inst_LoadGrade_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
-  void Inst_SubmitF_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst);
+  // No args
+  void Inst_SubmitA_Grade(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitB_Grade(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitC_Grade(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitD_Grade(hardware_t & hw, const inst_t & inst);
+  void Inst_SubmitF_Grade(hardware_t & hw, const inst_t & inst);
 
   // -- Median --
   // Tag-based args
@@ -1071,26 +1065,58 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
 
 void ProgramSynthesisExperiment::InitProgPop_Random() {
   std::cout << "Randomly initializing program population." << std::endl;
-  for (size_t i = 0; i < PROG_POP_SIZE; ++i) {
-    switch (PROGRAM_ARGUMENT_MODE) {
-      case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-        prog_world->Inject(TagLGP::GenRandTagGPProgram(*random, inst_lib, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
-        break;
-      }
-      case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-        prog_world->Inject(TagLGP::GenRandTagGPProgram_NumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
-        break;
-      }
-      case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-        prog_world->Inject(TagLGP::GenRandTagGPProgram_TagAndNumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
-        break;
-      }
-      default: {
-        std::cout << "Unrecognized PROGRAM_ARGUMENT_MODE (" << PROGRAM_ARGUMENT_MODE << "). Exiting." << std::endl;
-        exit(-1); 
-      }
-    }
-  }
+  // for (size_t i = 0; i < PROG_POP_SIZE; ++i) {
+  //   switch (PROGRAM_ARGUMENT_MODE) {
+  //     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+  //       prog_world->Inject(TagLGP::GenRandTagGPProgram(*random, inst_lib, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+  //       break;
+  //     }
+  //     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+  //       prog_world->Inject(TagLGP::GenRandTagGPProgram_NumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+  //       break;
+  //     }
+  //     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+  //       prog_world->Inject(TagLGP::GenRandTagGPProgram_TagAndNumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+  //       break;
+  //     }
+  //     default: {
+  //       std::cout << "Unrecognized PROGRAM_ARGUMENT_MODE (" << PROGRAM_ARGUMENT_MODE << "). Exiting." << std::endl;
+  //       exit(-1); 
+  //     }
+  //   }
+  // }
+
+  emp::vector<emp::BitSet<TAG_WIDTH>> matrix = GenHadamardMatrix<TAG_WIDTH>();
+  hardware_t::Program sol(inst_lib);
+  sol.PushInst("LoadThreshA-Tag",        {matrix[0], matrix[8], matrix[8]});
+  sol.PushInst("LoadThreshB-Tag",        {matrix[1], matrix[8], matrix[8]});
+  sol.PushInst("LoadThreshC-Tag",        {matrix[2], matrix[8], matrix[8]});
+  sol.PushInst("LoadThreshD-Tag",        {matrix[3], matrix[8], matrix[8]});
+  sol.PushInst("LoadGrade-Tag",          {matrix[4], matrix[8], matrix[8]});
+  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[0], matrix[5]});
+  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
+    sol.PushInst("SubmitA",              {matrix[8], matrix[8], matrix[8]});
+    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[1], matrix[5]});
+  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
+    sol.PushInst("SubmitB",              {matrix[8], matrix[8], matrix[8]});
+    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[2], matrix[5]});
+  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
+    sol.PushInst("SubmitC",              {matrix[8], matrix[8], matrix[8]});
+    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[3], matrix[5]});
+  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
+    sol.PushInst("SubmitD",              {matrix[8], matrix[8], matrix[8]});
+    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
+  sol.PushInst("SubmitF",                {matrix[8], matrix[8], matrix[8]});
+  
+  prog_world->Inject(sol, PROG_POP_SIZE);
+  
 }
 
 void ProgramSynthesisExperiment::SnapshotPrograms() {
@@ -1222,15 +1248,15 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_TagArgs() {
   if (!inst_lib->IsInst("Break")) {
     inst_lib->AddInst("Break", hardware_t::Inst_Break, 0, "Break current flow");
   }
+  if (!inst_lib->IsInst("Return")) {
+    inst_lib->AddInst("Return", hardware_t::Inst_Return, 0, "Return from current routine/call");
+  }
 
   if (USE_MODULES) {
     inst_lib->AddInst("Call-Tag", hardware_t::Inst_Call, 1, "Call module using A for tag-based reference");
     inst_lib->AddInst("Routine-Tag", hardware_t::Inst_Routine, 1, "Call module as a routine (don't use call stack)");
     if (!inst_lib->IsInst("ModuleDef")) {
       inst_lib->AddInst("ModuleDef", hardware_t::Inst_Nop, 1, "Define module with tag A", {inst_lib_t::InstProperty::MODULE});
-    }
-    if (!inst_lib->IsInst("Return")) {
-      inst_lib->AddInst("Return", hardware_t::Inst_Return, 0, "Return from current routine/call");
     }
   }
 }
@@ -1306,6 +1332,12 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_NumArgs() {
   if (!inst_lib->IsInst("Break")) {
     inst_lib->AddInst("Break", hardware_t::Inst_Break, 0, "Break current flow");
   }
+  if (!inst_lib->IsInst("Return")) {
+    inst_lib->AddInst("Return", hardware_t::Inst_Return, 0, "Return from current routine/call");
+  }
+
+  // todo - numeric argument module instructions(?)
+
 }
 
 /// Add numeric terminals
@@ -1385,8 +1417,8 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_NumberIO.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_NumberIO.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_NumberIO.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_NumberIO.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_NumberIO.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_NumberIO.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1476,8 +1508,8 @@ void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_SmallOrLarge.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_SmallOrLarge.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_SmallOrLarge.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_SmallOrLarge.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_SmallOrLarge.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_SmallOrLarge.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1527,22 +1559,24 @@ void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {
 
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
-
-  // TODO
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
+  inst_lib->AddInst("SubmitSmall", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitSmall_SmallOrLarge(hw, inst); }, 0);
+  inst_lib->AddInst("SubmitLarge", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitLarge_SmallOrLarge(hw, inst); }, 0);
+  inst_lib->AddInst("SubmitNone", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNone_SmallOrLarge(hw, inst); }, 0);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-     break;
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__TAG_ARGS(hw, inst); }, 1);
+      break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-     break;
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__NUM_ARGS(hw, inst); }, 1);
+      break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__NUM_ARGS(hw, inst); }, 1);
       break;
     }
   }
-
 }
 
 void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
@@ -1556,8 +1590,8 @@ void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_ForLoopIndex.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_ForLoopIndex.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_ForLoopIndex.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_ForLoopIndex.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_ForLoopIndex.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_ForLoopIndex.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1610,17 +1644,31 @@ void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  // todo
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadStart-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadEnd-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStep-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadStart-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadEnd-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStep-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      inst_lib->AddInst("LoadStart-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadEnd-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStep-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      
+      inst_lib->AddInst("LoadStart-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadEnd-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStep-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
       break;
     }
   }
@@ -1637,8 +1685,8 @@ void ProgramSynthesisExperiment::SetupProblem_CompareStringLengths() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_CompareStringLengths.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_CompareStringLengths.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_CompareStringLengths.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_CompareStringLengths.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_CompareStringLengths.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_CompareStringLengths.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1755,8 +1803,8 @@ void ProgramSynthesisExperiment::SetupProblem_LastIndexOfZero() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_LastIndexOfZero.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_LastIndexOfZero.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_LastIndexOfZero.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_LastIndexOfZero.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_LastIndexOfZero.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_LastIndexOfZero.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1844,8 +1892,8 @@ void ProgramSynthesisExperiment::SetupProblem_MirrorImage() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_MirrorImage.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_MirrorImage.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_MirrorImage.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_MirrorImage.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_MirrorImage.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_MirrorImage.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -1929,8 +1977,8 @@ void ProgramSynthesisExperiment::SetupProblem_SumOfSquares() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_SumOfSquares.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_SumOfSquares.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_SumOfSquares.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_SumOfSquares.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_SumOfSquares.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_SumOfSquares.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -2012,8 +2060,8 @@ void ProgramSynthesisExperiment::SetupProblem_VectorsSummed() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_VectorsSummed.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_VectorsSummed.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_VectorsSummed.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_VectorsSummed.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_VectorsSummed.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_VectorsSummed.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -2123,8 +2171,8 @@ void ProgramSynthesisExperiment::SetupProblem_Grade() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_Grade.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_Grade.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_Grade.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_Grade.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_Grade.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_Grade.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -2179,17 +2227,41 @@ void ProgramSynthesisExperiment::SetupProblem_Grade() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  // todo
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
+  inst_lib->AddInst("SubmitA", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitA_Grade(hw, inst); }, 0);
+  inst_lib->AddInst("SubmitB", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitB_Grade(hw, inst); }, 0);
+  inst_lib->AddInst("SubmitC", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitC_Grade(hw, inst); }, 0);
+  inst_lib->AddInst("SubmitD", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitD_Grade(hw, inst); }, 0);
+  inst_lib->AddInst("SubmitF", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitF_Grade(hw, inst); }, 0);
+
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadThreshA-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshB-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshC-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshD-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadGrade-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__TAG_ARGS(hw, inst); }, 1); 
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadThreshA-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshB-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshC-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshD-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadGrade-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__NUM_ARGS(hw, inst); }, 1); 
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      inst_lib->AddInst("LoadThreshA-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshB-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshC-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshD-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadGrade-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__TAG_ARGS(hw, inst); }, 1); 
+
+      inst_lib->AddInst("LoadThreshA-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshB-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshC-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshD-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadGrade-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__NUM_ARGS(hw, inst); }, 1); 
       break;
     }
   }
@@ -2206,8 +2278,8 @@ void ProgramSynthesisExperiment::SetupProblem_Median() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_Median.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_Median.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_Median.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_Median.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_Median.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_Median.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -2287,8 +2359,8 @@ void ProgramSynthesisExperiment::SetupProblem_Smallest() {
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
   std::string training_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTrainingSetFilename();  
   std::string testing_examples_fpath = BENCHMARK_DATA_DIR + problems.at(PROBLEM).GetTestingSetFilename();  
-  prob_utils_Smallest.GetTrainingSet().LoadTestCases(training_examples_fpath);
-  prob_utils_Smallest.GetTestingSet().LoadTestCases(testing_examples_fpath);
+  prob_utils_Smallest.GetTrainingSet().LoadTestCasesWithCSVReader(training_examples_fpath);
+  prob_utils_Smallest.GetTestingSet().LoadTestCasesWithCSVReader(testing_examples_fpath);
   TRAINING_SET_SIZE = prob_utils_Smallest.GetTrainingSet().GetSize();
   TESTING_SET_SIZE = prob_utils_Smallest.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
@@ -2439,76 +2511,451 @@ void ProgramSynthesisExperiment::Inst_SubmitNum_NumberIO__NUM_ARGS(hardware_t & 
 ////////////////////////////////////////////////////////////////////////////////
 // Small or large
 ////////////////////////////////////////////////////////////////////////////////
-void ProgramSynthesisExperiment::Inst_LoadInt_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitSmall_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitLarge_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNone_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadInt_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitSmall_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitLarge_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNone_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadInt_SmallOrLarge__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_SmallOrLarge.GetTestInput(eval_util.use_training_set, eval_util.current_testID));
+}
+
+void ProgramSynthesisExperiment::Inst_LoadInt_SmallOrLarge__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_SmallOrLarge.GetTestInput(eval_util.use_training_set, eval_util.current_testID));
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitSmall_SmallOrLarge(hardware_t & hw, const inst_t & inst) { 
+  prob_utils_SmallOrLarge.Submit("small");
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitLarge_SmallOrLarge(hardware_t & hw, const inst_t & inst) { 
+  prob_utils_SmallOrLarge.Submit("large");
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitNone_SmallOrLarge(hardware_t & hw, const inst_t & inst) { 
+  prob_utils_SmallOrLarge.Submit("");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // For Loop Index
 ////////////////////////////////////////////////////////////////////////////////
-void ProgramSynthesisExperiment::Inst_LoadStart_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadStep_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadStart_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadStep_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+// -- Tag-based arguments --
+void ProgramSynthesisExperiment::Inst_LoadStart_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_ForLoopIndex.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_ForLoopIndex.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadStep_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_ForLoopIndex.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]);
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), hardware_t::MemPosType::NUM);
+  if (!hw.IsValidMemPos(posA)) return;
+
+  prob_utils_ForLoopIndex.Submit((int)wmem.AccessVal(posA).GetNum());
+}
+
+// -- Numeric arguments --
+void ProgramSynthesisExperiment::Inst_LoadStart_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_ForLoopIndex.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_ForLoopIndex.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]); 
+}
+
+void ProgramSynthesisExperiment::Inst_LoadStep_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_ForLoopIndex.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]); 
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, hardware_t::MemPosType::NUM)) return;
+
+  prob_utils_ForLoopIndex.Submit((int)wmem.AccessVal(posA).GetNum()); 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Grade
 ////////////////////////////////////////////////////////////////////////////////
-void ProgramSynthesisExperiment::Inst_LoadThreshA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadThreshB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadThreshC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadThreshD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadGrade_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitF_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadThreshA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadThreshB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadThreshC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadThreshD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadGrade_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitF_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+// -- Tag-based arguments --
+void ProgramSynthesisExperiment::Inst_LoadThreshA_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadThreshB_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadThreshC_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadThreshD_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[3]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadGrade_Grade__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[4]);
+}
+
+// -- Numeric arguments --
+void ProgramSynthesisExperiment::Inst_LoadThreshA_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadThreshB_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadThreshC_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadThreshD_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[3]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadGrade_Grade__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Grade.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[4]);
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitA_Grade(hardware_t & hw, const inst_t & inst) { prob_utils_Grade.Submit("A"); }
+void ProgramSynthesisExperiment::Inst_SubmitB_Grade(hardware_t & hw, const inst_t & inst) { prob_utils_Grade.Submit("B"); }
+void ProgramSynthesisExperiment::Inst_SubmitC_Grade(hardware_t & hw, const inst_t & inst) { prob_utils_Grade.Submit("C"); }
+void ProgramSynthesisExperiment::Inst_SubmitD_Grade(hardware_t & hw, const inst_t & inst) { prob_utils_Grade.Submit("D"); }
+void ProgramSynthesisExperiment::Inst_SubmitF_Grade(hardware_t & hw, const inst_t & inst) { prob_utils_Grade.Submit("F"); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Median
 ////////////////////////////////////////////////////////////////////////////////
-void ProgramSynthesisExperiment::Inst_LoadNum1_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum2_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum3_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNum_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum1_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum2_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum3_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNum_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+// Tag-based arguments
+void ProgramSynthesisExperiment::Inst_LoadNum1_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Median.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadNum2_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Median.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadNum3_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Median.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]);
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitNum_Median__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), hardware_t::MemPosType::NUM);
+  if (!hw.IsValidMemPos(posA)) return;
+
+  prob_utils_Median.Submit((int)wmem.AccessVal(posA).GetNum());
+}
+
+// -- Numeric arguments --
+void ProgramSynthesisExperiment::Inst_LoadNum1_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Median.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadNum2_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Median.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]);
+}
+
+void ProgramSynthesisExperiment::Inst_LoadNum3_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Median.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]);
+}
+
+void ProgramSynthesisExperiment::Inst_SubmitNum_Median__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, hardware_t::MemPosType::NUM)) return;
+
+  prob_utils_Median.Submit((int)wmem.AccessVal(posA).GetNum());   
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Smallest
 ////////////////////////////////////////////////////////////////////////////////
-void ProgramSynthesisExperiment::Inst_LoadNum1_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum2_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum3_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum4_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNum_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum1_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum2_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum3_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_LoadNum4_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
-void ProgramSynthesisExperiment::Inst_SubmitNum_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { ; }
+void ProgramSynthesisExperiment::Inst_LoadNum1_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);  
+}
+void ProgramSynthesisExperiment::Inst_LoadNum2_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]);  
+}
+void ProgramSynthesisExperiment::Inst_LoadNum3_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]);  
+}
+void ProgramSynthesisExperiment::Inst_LoadNum4_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
+  if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[3]);  
+}
+void ProgramSynthesisExperiment::Inst_SubmitNum_Smallest__TAG_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), hardware_t::MemPosType::NUM);
+  if (!hw.IsValidMemPos(posA)) return;
+
+  prob_utils_Smallest.Submit((int)wmem.AccessVal(posA).GetNum());
+}
+// -- Numeric arguments --
+void ProgramSynthesisExperiment::Inst_LoadNum1_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[0]);
+}
+void ProgramSynthesisExperiment::Inst_LoadNum2_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[1]);
+}
+void ProgramSynthesisExperiment::Inst_LoadNum3_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[2]);
+}
+void ProgramSynthesisExperiment::Inst_LoadNum4_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
+
+  wmem.Set(posA, prob_utils_Smallest.GetTestInput(eval_util.use_training_set, eval_util.current_testID)[3]);  
+}
+void ProgramSynthesisExperiment::Inst_SubmitNum_Smallest__NUM_ARGS(hardware_t & hw, const inst_t & inst) { 
+  hardware_t::CallState & state = hw.GetCurCallState();
+  hardware_t::Memory & wmem = state.GetWorkingMem();
+
+  // Find arguments
+  emp_assert(inst.arg_nums.size() >= 1);
+  size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, hardware_t::MemPosType::NUM)) return;
+
+  prob_utils_Smallest.Submit((int)wmem.AccessVal(posA).GetNum());  
+}
 
 
 #endif
