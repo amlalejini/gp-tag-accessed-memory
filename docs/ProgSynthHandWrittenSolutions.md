@@ -15,7 +15,11 @@
   - [Grade - Tag-based arguments](#grade---tag-based-arguments)
   - [Grade - Numeric arguments](#grade---numeric-arguments)
 - [Median](#median)
+  - [Median - Tag-based arguments](#median---tag-based-arguments)
+  - [Median - Numeric arguments](#median---numeric-arguments)
 - [Smallest](#smallest)
+  - [Smallest - Tag-based arguments](#smallest---tag-based-arguments)
+  - [Smallest - Numeric arguments](#smallest---numeric-arguments)
 
 <!-- /TOC -->
 
@@ -155,7 +159,7 @@
   sol.PushInst("LoadThreshB-Tag",        {matrix[1], matrix[8], matrix[8]});
   sol.PushInst("LoadThreshC-Tag",        {matrix[2], matrix[8], matrix[8]});
   sol.PushInst("LoadThreshD-Tag",        {matrix[3], matrix[8], matrix[8]});
-  sol.PushInst("LoadGrade",              {matrix[4], matrix[8], matrix[8]});
+  sol.PushInst("LoadGrade-Tag",              {matrix[4], matrix[8], matrix[8]});
   sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[0], matrix[5]});
   sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
     sol.PushInst("SubmitA",              {matrix[8], matrix[8], matrix[8]});
@@ -183,6 +187,57 @@
 
 ### Grade - Numeric arguments
 
+```{C++}
+  emp::vector<emp::BitSet<TAG_WIDTH>> matrix = GenHadamardMatrix<TAG_WIDTH>();
+  hardware_t::Program sol(inst_lib);
+  sol.PushInst("LoadThreshA-Num",        {0, 8, 8});
+  sol.PushInst("LoadThreshB-Num",        {1, 8, 8});
+  sol.PushInst("LoadThreshC-Num",        {2, 8, 8});
+  sol.PushInst("LoadThreshD-Num",        {3, 8, 8});
+  sol.PushInst("LoadGrade-Num",              {4, 8, 8});
+  sol.PushInst("TestNumGreaterTEqu-Num", {4, 0, 5});
+  sol.PushInst("If-Num",                 {5, 8, 8});
+    sol.PushInst("SubmitA",              {8, 8, 8});
+    sol.PushInst("Return",               {8, 8, 8});
+  sol.PushInst("Close",                  {8, 8, 8});
+  sol.PushInst("TestNumGreaterTEqu-Num", {4, 1, 5});
+  sol.PushInst("If-Num",                 {5, 8, 8});
+    sol.PushInst("SubmitB",              {8, 8, 8});
+    sol.PushInst("Return",               {8, 8, 8});
+  sol.PushInst("Close",                  {8, 8, 8});
+  sol.PushInst("TestNumGreaterTEqu-Num", {4, 2, 5});
+  sol.PushInst("If-Num",                 {5, 8, 8});
+    sol.PushInst("SubmitC",              {8, 8, 8});
+    sol.PushInst("Return",               {8, 8, 8});
+  sol.PushInst("Close",                  {8, 8, 8});
+  sol.PushInst("TestNumGreaterTEqu-Num", {4, 3, 5});
+  sol.PushInst("If-Num",                 {5, 8, 8});
+    sol.PushInst("SubmitD",              {8, 8, 8});
+    sol.PushInst("Return",               {8, 8, 8});
+  sol.PushInst("Close",                  {8, 8, 8});
+  sol.PushInst("SubmitF",                {8, 8, 8});
+  
+  prog_world->Inject(sol, PROG_POP_SIZE);
+```
+
 ## Median
 
+### Median - Tag-based arguments
+
+```{C++}
+  emp::vector<emp::BitSet<TAG_WIDTH>> matrix = GenHadamardMatrix<TAG_WIDTH>();
+  hardware_t::Program sol(inst_lib);
+
+  // todo
+
+  prog_world->Inject(sol, PROG_POP_SIZE);
+```
+
+### Median - Numeric arguments
+
 ## Smallest
+
+### Smallest - Tag-based arguments
+
+### Smallest - Numeric arguments
+

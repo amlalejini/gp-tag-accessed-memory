@@ -1065,58 +1065,26 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
 
 void ProgramSynthesisExperiment::InitProgPop_Random() {
   std::cout << "Randomly initializing program population." << std::endl;
-  // for (size_t i = 0; i < PROG_POP_SIZE; ++i) {
-  //   switch (PROGRAM_ARGUMENT_MODE) {
-  //     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-  //       prog_world->Inject(TagLGP::GenRandTagGPProgram(*random, inst_lib, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
-  //       break;
-  //     }
-  //     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-  //       prog_world->Inject(TagLGP::GenRandTagGPProgram_NumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
-  //       break;
-  //     }
-  //     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-  //       prog_world->Inject(TagLGP::GenRandTagGPProgram_TagAndNumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
-  //       break;
-  //     }
-  //     default: {
-  //       std::cout << "Unrecognized PROGRAM_ARGUMENT_MODE (" << PROGRAM_ARGUMENT_MODE << "). Exiting." << std::endl;
-  //       exit(-1); 
-  //     }
-  //   }
-  // }
-
-  emp::vector<emp::BitSet<TAG_WIDTH>> matrix = GenHadamardMatrix<TAG_WIDTH>();
-  hardware_t::Program sol(inst_lib);
-  sol.PushInst("LoadThreshA-Tag",        {matrix[0], matrix[8], matrix[8]});
-  sol.PushInst("LoadThreshB-Tag",        {matrix[1], matrix[8], matrix[8]});
-  sol.PushInst("LoadThreshC-Tag",        {matrix[2], matrix[8], matrix[8]});
-  sol.PushInst("LoadThreshD-Tag",        {matrix[3], matrix[8], matrix[8]});
-  sol.PushInst("LoadGrade-Tag",          {matrix[4], matrix[8], matrix[8]});
-  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[0], matrix[5]});
-  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
-    sol.PushInst("SubmitA",              {matrix[8], matrix[8], matrix[8]});
-    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[1], matrix[5]});
-  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
-    sol.PushInst("SubmitB",              {matrix[8], matrix[8], matrix[8]});
-    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[2], matrix[5]});
-  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
-    sol.PushInst("SubmitC",              {matrix[8], matrix[8], matrix[8]});
-    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("TestNumGreaterTEqu-Tag", {matrix[4], matrix[3], matrix[5]});
-  sol.PushInst("If-Tag",                 {matrix[5], matrix[8], matrix[8]});
-    sol.PushInst("SubmitD",              {matrix[8], matrix[8], matrix[8]});
-    sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
-  sol.PushInst("SubmitF",                {matrix[8], matrix[8], matrix[8]});
-  
-  prog_world->Inject(sol, PROG_POP_SIZE);
-  
+  for (size_t i = 0; i < PROG_POP_SIZE; ++i) {
+    switch (PROGRAM_ARGUMENT_MODE) {
+      case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+        prog_world->Inject(TagLGP::GenRandTagGPProgram(*random, inst_lib, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+        break;
+      }
+      case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+        prog_world->Inject(TagLGP::GenRandTagGPProgram_NumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+        break;
+      }
+      case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+        prog_world->Inject(TagLGP::GenRandTagGPProgram_TagAndNumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+        break;
+      }
+      default: {
+        std::cout << "Unrecognized PROGRAM_ARGUMENT_MODE (" << PROGRAM_ARGUMENT_MODE << "). Exiting." << std::endl;
+        exit(-1); 
+      }
+    }
+  }
 }
 
 void ProgramSynthesisExperiment::SnapshotPrograms() {
@@ -2331,18 +2299,31 @@ void ProgramSynthesisExperiment::SetupProblem_Median() {
 
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
-
-  // todo
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__TAG_ARGS(hw, inst); }, 1);
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__NUM_ARGS(hw, inst); }, 1);
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__TAG_ARGS(hw, inst); }, 1);
+      
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__NUM_ARGS(hw, inst); }, 1);
       break;
     }
   }
@@ -2414,17 +2395,35 @@ void ProgramSynthesisExperiment::SetupProblem_Smallest() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  // todo
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum4-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__TAG_ARGS(hw, inst); }, 1);
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum4-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__NUM_ARGS(hw, inst); }, 1);
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum4-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__TAG_ARGS(hw, inst); }, 1);
+
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum4-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__NUM_ARGS(hw, inst); }, 1);
       break;
     }
   }
