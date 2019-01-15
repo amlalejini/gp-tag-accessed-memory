@@ -3605,7 +3605,7 @@ TEST_CASE("Inst_Routine", "[taglgp]") {
   // ---------------------------------------
 
 }
-*/
+
 
 TEST_CASE("RandomPrograms", "[taglgp]") {
 
@@ -3825,4 +3825,77 @@ TEST_CASE("RandomProgramsNumericArgs", "[taglgp]") {
     }
     prg.Print(); 
   }
+}
+*/
+
+TEST_CASE("FindBestMatch (DIRECT INDEX)", "[taglgp]") {
+  constexpr size_t TAG_WIDTH = 4;
+  constexpr int seed = 2;
+
+  // Not going to use tags, but still have to define TagLinearGP virtual hardware with tag width.
+  using hardware_t = TagLGP::TagLinearGP_TW<TAG_WIDTH>;
+  using program_t = typename hardware_t::program_t;
+  using inst_t = typename hardware_t::inst_t;
+  using inst_lib_t = TagLGP::InstLib<hardware_t>;
+  using memory_t = typename hardware_t::memory_t;
+
+  emp::Ptr<emp::Random> random = emp::NewPtr<emp::Random>(seed);
+
+  emp::Ptr<inst_lib_t> inst_lib = emp::NewPtr<inst_lib_t>();
+  hardware_t cpu(inst_lib, random);
+
+  // Configure CPU
+  emp::vector<emp::BitSet<TAG_WIDTH>> matrix = GenHadamardMatrix<TAG_WIDTH>();
+  cpu.SetMemSize(TAG_WIDTH);
+  cpu.SetMemTags(matrix); // Not going to use these here, but no harm in setting them up.
+
+  inst_lib->AddInst("Nop", hardware_t::Inst_Nop, 0, "");
+  program_t prog(inst_lib);
+  prog.PushInst("Nop", {0,0,0});
+  prog.PushInst("Nop", {0,0,0});
+  prog.PushInst("Nop", {0,0,0});
+  prog.PushInst("Nop", {0,0,0});
+  prog.PushInst("Nop", {0,0,0});
+  
+  cpu.SetProgram(prog);
+  cpu.CallModule(0);
+
+  auto & state = cpu.GetCurCallState();
+  memory_t & wmem = state.GetWorkingMem();
+
+  std::cout << "--------- initial hardware state ---------" << std::endl;
+  cpu.PrintHardwareState();
+  
+  size_t mem_index = 2;
+  hardware_t::MemPosType mem_type = hardware_t::MemPosType::NUM;
+  
+  std::cout << "Search for NUM @ index " << mem_index << ": " << cpu.FindBestMemoryMatch(wmem, mem_index, mem_type) << std::endl;
+  
+  mem_index = 2;
+  mem_type = hardware_t::MemPosType::ANY;
+  std::cout << "Search for ANY @ index " << mem_index << ": " << cpu.FindBestMemoryMatch(wmem, mem_index, mem_type) << std::endl;
+
+  mem_index = 2;
+  mem_type = hardware_t::MemPosType::VEC;
+  std::cout << "Search for VEC @ index " << mem_index << ": " << cpu.FindBestMemoryMatch(wmem, mem_index, mem_type) << std::endl;
+
+  mem_index = 2;
+  mem_type = hardware_t::MemPosType::STR;
+  std::cout << "Search for STR @ index " << mem_index << ": " << cpu.FindBestMemoryMatch(wmem, mem_index, mem_type) << std::endl;
+
+  wmem.Set(0, "Hello");
+  wmem.Set(1, {"hello", "there", "again"});
+  cpu.PrintHardwareState();
+
+  mem_index = 2;
+  mem_type = hardware_t::MemPosType::VEC;
+  std::cout << "Search for VEC @ index " << mem_index << ": " << cpu.FindBestMemoryMatch(wmem, mem_index, mem_type) << std::endl;
+
+  mem_index = 2;
+  mem_type = hardware_t::MemPosType::STR;
+  std::cout << "Search for STR @ index " << mem_index << ": " << cpu.FindBestMemoryMatch(wmem, mem_index, mem_type) << std::endl;
+
+  mem_index = 2;
+  std::cout << "Search for STR/VEC @ index " << mem_index << ": " << cpu.FindBestMemoryMatch(wmem, mem_index, {hardware_t::MemPosType::VEC, hardware_t::MemPosType::STR}) << std::endl;
+
 }
