@@ -200,6 +200,7 @@ public:
   using hardware_t = typename TagLGP::TagLinearGP_TW<TAG_WIDTH>;
   using inst_lib_t = typename TagLGP::InstLib<hardware_t>;
   using inst_t = typename hardware_t::inst_t;
+  using inst_prop_t = typename inst_lib_t::InstProperty;
 
   using prog_org_t = ProgOrg<TAG_WIDTH>;
   using prog_org_phen_t = typename prog_org_t::Phenotype;
@@ -298,6 +299,7 @@ private:
   // ProblemUtilities_Syllables prob_utils_Syllables;
 
   emp::Ptr<emp::DataFile> solution_file;
+  emp::Ptr<emp::DataFile> prog_arg_info_file;
   
   /// Struct to track evaluation test result information.
   struct TestResult {
@@ -399,9 +401,22 @@ private:
     std::function<std::string(void)> get_testingset_eval__passes_by_test; // - get_validation_eval__passes_by_test
 
     std::function<size_t(void)> get_program_len;
+    std::function<size_t(void)> get_tag_arg_inst_cnt;
+    std::function<size_t(void)> get_num_arg_inst_cnt;
+    std::function<size_t(void)> get_no_arg_inst_cnt;
     std::function<std::string(void)> get_program;
     
   } program_stats;
+
+  struct ArgTypeDistribution {
+    size_t num_arg_instructions;
+    size_t tag_arg_instructions;
+    size_t no_arg_instructions;
+    size_t total_instructions;
+  };
+
+  ArgTypeDistribution pop_arg_type_distribution;
+
   std::function<size_t(void)> get_update;
   
   // Internal functions
@@ -507,6 +522,52 @@ private:
     std::cout << "=======================================" << std::endl;
   }
 
+  ArgTypeDistribution CountArgTypes(const prog_org_gen_t & program) {
+    ArgTypeDistribution distribution;
+    distribution.num_arg_instructions = 0;
+    distribution.tag_arg_instructions = 0;
+    distribution.no_arg_instructions = 0;
+    distribution.total_instructions = program.GetSize();
+
+    for (size_t i = 0; i < program.GetSize(); ++i) {
+      bool has_num_args = inst_lib->HasProperty(program[i].id, inst_prop_t::NUM_ARGS);
+      bool has_tag_args = inst_lib->HasProperty(program[i].id, inst_prop_t::TAG_ARGS);
+      if (has_num_args) distribution.num_arg_instructions++;
+      if (has_tag_args) distribution.tag_arg_instructions++;
+      if (!has_num_args && !has_tag_args) distribution.no_arg_instructions++;
+    }
+    return distribution;
+  }
+
+  size_t CountTagArgInstructions(const prog_org_gen_t & program) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < program.GetSize(); ++i) {
+      bool has_tag_args = inst_lib->HasProperty(program[i].id, inst_prop_t::TAG_ARGS);
+      if (has_tag_args) cnt++;
+    }
+    return cnt;
+  }
+
+  size_t CountNumArgInstructions(const prog_org_gen_t & program) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < program.GetSize(); ++i) {
+      bool has_num_args = inst_lib->HasProperty(program[i].id, inst_prop_t::NUM_ARGS);
+      if (has_num_args) cnt++;
+    }
+    return cnt;
+  }
+
+  size_t CountNoArgInstructions(const prog_org_gen_t & program) {
+    size_t cnt = 0;
+    for (size_t i = 0; i < program.GetSize(); ++i) {
+      bool has_num_args = inst_lib->HasProperty(program[i].id, inst_prop_t::NUM_ARGS);
+      bool has_tag_args = inst_lib->HasProperty(program[i].id, inst_prop_t::TAG_ARGS);
+      if (!has_num_args && !has_tag_args) cnt++;
+    }
+    return cnt;
+  }
+
+
   // ------------ Problem-specific instructions ------------
   
   // -- Number IO --
@@ -602,6 +663,8 @@ public:
 
   ~ProgramSynthesisExperiment() {
     if (setup) {
+      solution_file.Delete();
+      prog_arg_info_file.Delete();
       eval_hardware.Delete();
       inst_lib.Delete();
       prog_world.Delete();
@@ -663,7 +726,23 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
     std::cout << "solution found? " << solution_found << "; ";
     std::cout << "smallest solution? " << smallest_prog_solution_size << std::endl;
 
-    if (update % SNAPSHOT_INTERVAL == 0 || update == GENERATIONS) do_pop_snapshot_sig.Trigger(); 
+    if (update % SNAPSHOT_INTERVAL == 0 || update == GENERATIONS) do_pop_snapshot_sig.Trigger();
+
+    if (update % SUMMARY_STATS_INTERVAL == 0 || update == GENERATIONS) {
+      // Update population argument type distribution
+      pop_arg_type_distribution.num_arg_instructions = 0;
+      pop_arg_type_distribution.tag_arg_instructions = 0;
+      pop_arg_type_distribution.no_arg_instructions = 0;
+      pop_arg_type_distribution.total_instructions = 0;
+      for (size_t i = 0; i < prog_world->GetSize(); ++i) {
+        auto prog_distribution = CountArgTypes(prog_world->GetOrg(i).GetGenome());
+        pop_arg_type_distribution.num_arg_instructions += prog_distribution.num_arg_instructions;
+        pop_arg_type_distribution.tag_arg_instructions += prog_distribution.tag_arg_instructions;
+        pop_arg_type_distribution.no_arg_instructions += prog_distribution.no_arg_instructions;
+        pop_arg_type_distribution.total_instructions += prog_distribution.total_instructions;
+      }
+      prog_arg_info_file->Update();
+    } 
 
     prog_world->Update();
     prog_world->ClearCache();
@@ -1010,6 +1089,9 @@ void ProgramSynthesisExperiment::SetupDataCollection() {
     return stream.str();
   };
 
+  program_stats.get_tag_arg_inst_cnt = [this]() { return this->CountTagArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome()); };
+  program_stats.get_num_arg_inst_cnt = [this]() { return this->CountNumArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome()); };
+  program_stats.get_no_arg_inst_cnt = [this]() { return this->CountNoArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome()); };
 
   get_update = [this]() { return prog_world->GetUpdate(); };
 
@@ -1017,9 +1099,21 @@ void ProgramSynthesisExperiment::SetupDataCollection() {
   solution_file = emp::NewPtr<emp::DataFile>(DATA_DIRECTORY + "/solutions.csv");
   solution_file->AddFun(get_update, "update");
   solution_file->AddFun(program_stats.get_id, "program_id");
+  solution_file->AddFun(program_stats.get_tag_arg_inst_cnt, "program_tag_arg_inst_cnt");
+  solution_file->AddFun(program_stats.get_num_arg_inst_cnt, "program_num_arg_inst_cnt");
+  solution_file->AddFun(program_stats.get_no_arg_inst_cnt, "program_no_arg_inst_cnt");
   solution_file->AddFun(program_stats.get_program_len, "program_len");
   solution_file->AddFun(program_stats.get_program, "program");
   solution_file->PrintHeaderKeys();
+
+  // Setup program population argument distribution file
+  prog_arg_info_file = emp::NewPtr<emp::DataFile>(DATA_DIRECTORY + "/inst_arg_types.csv");
+  prog_arg_info_file->AddFun(get_update, "update");
+  prog_arg_info_file->template AddFun<size_t>([this]() { return pop_arg_type_distribution.num_arg_instructions; }, "total_num_arg_instructions");
+  prog_arg_info_file->template AddFun<size_t>([this]() { return pop_arg_type_distribution.tag_arg_instructions; }, "total_tag_arg_instructions");
+  prog_arg_info_file->template AddFun<size_t>([this]() { return pop_arg_type_distribution.no_arg_instructions; }, "total_no_arg_instructions");
+  prog_arg_info_file->template AddFun<size_t>([this]() { return pop_arg_type_distribution.total_instructions; }, "total_instructions");
+  prog_arg_info_file->PrintHeaderKeys();
 
   do_pop_snapshot_sig.AddAction([this]() {
     SnapshotPrograms();
@@ -1107,8 +1201,10 @@ void ProgramSynthesisExperiment::SnapshotPrograms() {
   file.AddFun(program_stats.get_testingset_eval__num_tests, "num_tests__testingset_eval");
   file.AddFun(program_stats.get_testingset_eval__passes_by_test, "passes_by_test__testingset_eval");
 
+  file.AddFun(program_stats.get_tag_arg_inst_cnt, "program_tag_arg_inst_cnt");
+  file.AddFun(program_stats.get_num_arg_inst_cnt, "program_num_arg_inst_cnt");
+  file.AddFun(program_stats.get_no_arg_inst_cnt, "program_no_arg_inst_cnt");
   file.AddFun(program_stats.get_program_len, "program_len");
-  file.AddFun(program_stats.get_program, "program");
 
   file.PrintHeaderKeys();
 
@@ -1164,37 +1260,27 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_TagArgs() {
   //   Not
   //   Inc
   //   Dec
-  inst_lib->AddInst("Add-Tag", hardware_t::Inst_Add, 3, "wmemANY[C] = wmemNUM[A] + wmemNUM[B]");
-  inst_lib->AddInst("Sub-Tag", hardware_t::Inst_Sub, 3, "wmemANY[C] = wmemNUM[A] - wmemNUM[B]");
-  inst_lib->AddInst("Mult-Tag", hardware_t::Inst_Mult, 3, "wmemANY[C] = wmemNUM[A] * wmemNUM[B]");
-  inst_lib->AddInst("Div-Tag", hardware_t::Inst_Div, 3, "if (wmemNUM[B] != 0) wmemANY[C] = wmemNUM[A] / wmemNUM[B]; else NOP");
-  inst_lib->AddInst("Mod-Tag", hardware_t::Inst_Mod, 3, "if (wmemNUM[B] != 0) wmemANY[C] = int(wmemNUM[A]) % int(wmemNUM[B]); else NOP");
-  inst_lib->AddInst("TestNumEqu-Tag", hardware_t::Inst_TestNumEqu, 3, "wmemANY[C] = wmemNUM[A] == wmemNUM[B]");
-  inst_lib->AddInst("TestNumNEqu-Tag", hardware_t::Inst_TestNumNEqu, 3, "wmemANY[C] = wmemNUM[A] != wmemNUM[B]");
-  inst_lib->AddInst("TestNumLess-Tag", hardware_t::Inst_TestNumLess, 3, "wmemANY[C] = wmemNUM[A] < wmemNUM[B]");
-  inst_lib->AddInst("TestNumLessTEqu-Tag", hardware_t::Inst_TestNumLessTEqu, 3, "wmemANY[C] = wmemNUM[A] <= wmemNUM[B]");
-  inst_lib->AddInst("TestNumGreater-Tag", hardware_t::Inst_TestNumGreater, 3, "wmemANY[C] = wmemNUM[A] > wmemNUM[B]");
-  inst_lib->AddInst("TestNumGreaterTEqu-Tag", hardware_t::Inst_TestNumGreaterTEqu, 3, "wmemANY[C] = wmemNUM[A] >= wmemNUM[B]");
-  inst_lib->AddInst("Floor-Tag", hardware_t::Inst_Floor, 1, "wmemNUM[A] = floor(wmemNUM[A])");
-  inst_lib->AddInst("Not-Tag", hardware_t::Inst_Not, 1, "wmemNUM[A] = !wmemNUM[A]"); 
-  inst_lib->AddInst("Inc-Tag", hardware_t::Inst_Inc, 1, "wmemNUM[A] = wmemNUM[A] + 1");
-  inst_lib->AddInst("Dec-Tag", hardware_t::Inst_Dec, 1, "wmemNUM[A] = wmemNUM[A] - 1");
+  inst_lib->AddInst("Add-Tag", hardware_t::Inst_Add, 3, "wmemANY[C] = wmemNUM[A] + wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Sub-Tag", hardware_t::Inst_Sub, 3, "wmemANY[C] = wmemNUM[A] - wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Mult-Tag", hardware_t::Inst_Mult, 3, "wmemANY[C] = wmemNUM[A] * wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Div-Tag", hardware_t::Inst_Div, 3, "if (wmemNUM[B] != 0) wmemANY[C] = wmemNUM[A] / wmemNUM[B]; else NOP", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Mod-Tag", hardware_t::Inst_Mod, 3, "if (wmemNUM[B] != 0) wmemANY[C] = int(wmemNUM[A]) % int(wmemNUM[B]); else NOP", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumEqu-Tag", hardware_t::Inst_TestNumEqu, 3, "wmemANY[C] = wmemNUM[A] == wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumNEqu-Tag", hardware_t::Inst_TestNumNEqu, 3, "wmemANY[C] = wmemNUM[A] != wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumLess-Tag", hardware_t::Inst_TestNumLess, 3, "wmemANY[C] = wmemNUM[A] < wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumLessTEqu-Tag", hardware_t::Inst_TestNumLessTEqu, 3, "wmemANY[C] = wmemNUM[A] <= wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumGreater-Tag", hardware_t::Inst_TestNumGreater, 3, "wmemANY[C] = wmemNUM[A] > wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumGreaterTEqu-Tag", hardware_t::Inst_TestNumGreaterTEqu, 3, "wmemANY[C] = wmemNUM[A] >= wmemNUM[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Floor-Tag", hardware_t::Inst_Floor, 1, "wmemNUM[A] = floor(wmemNUM[A])", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Not-Tag", hardware_t::Inst_Not, 1, "wmemNUM[A] = !wmemNUM[A]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+  inst_lib->AddInst("Inc-Tag", hardware_t::Inst_Inc, 1, "wmemNUM[A] = wmemNUM[A] + 1", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Dec-Tag", hardware_t::Inst_Dec, 1, "wmemNUM[A] = wmemNUM[A] - 1", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
 
   // - Memory-related instructions -
   //   CopyMem
   //   SwapMem
-  //   Input
-  //   Output
-  //   CommitGlobal
-  //   PullGlobal
-  inst_lib->AddInst("CopyMem-Tag", hardware_t::Inst_CopyMem, 2, "wmemANY[B] = wmemANY[A] // Copy mem[A] to mem[B]");
-  inst_lib->AddInst("SwapMem-Tag", hardware_t::Inst_SwapMem, 2, "swap(wmemANY[A], wmemANY[B])");
-  inst_lib->AddInst("Input-Tag", hardware_t::Inst_Input, 2, "wmemANY[B] = imemANY[A]");
-  inst_lib->AddInst("Output-Tag", hardware_t::Inst_Output, 2, "omemANY[B] = wmemANY[A]");
-  inst_lib->AddInst("CommitGlobal-Tag", hardware_t::Inst_CommitGlobal, 2, "gmemANY[B] = wmemANY[A]");
-  inst_lib->AddInst("PullGlobal-Tag", hardware_t::Inst_PullGlobal, 2, "wmemANY[B] = gmemANY[A]");
-  // inst_lib->AddInst("TestMemEqu-Tag", hardware_t::Inst_TestMemEqu, 3, "wmemANY[C] = wmemANY[A] == wmemANY[B]");
-  // inst_lib->AddInst("TestMemNEqu-Tag", hardware_t::Inst_TestMemNEqu, 3, "wmemANY[C] = wmemANY[A] != wmemANY[B]");
+  inst_lib->AddInst("CopyMem-Tag", hardware_t::Inst_CopyMem, 2, "wmemANY[B] = wmemANY[A] // Copy mem[A] to mem[B]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("SwapMem-Tag", hardware_t::Inst_SwapMem, 2, "swap(wmemANY[A], wmemANY[B])", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
 
   // - Non-module flow control instructions -
   //   If
@@ -1203,11 +1289,10 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_TagArgs() {
   //   Countdown
   //   Close
   //   Break
-  inst_lib->AddInst("If-Tag", hardware_t::Inst_If, 1, "Execute next flow if(wmemANY[A]) // To be true, mem loc must be non-zero number", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  inst_lib->AddInst("IfNot-Tag", hardware_t::Inst_IfNot, 1, "Execute next flow if(!wmemANY[A])", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  inst_lib->AddInst("While-Tag", hardware_t::Inst_While, 1, "While loop over wmemANY[A]", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  inst_lib->AddInst("Countdown-Tag", hardware_t::Inst_Countdown, 1, "Countdown loop with wmemANY as index.", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  // inst_lib->AddInst("Foreach-Tag", hardware_t::Inst_Foreach, 2, "For each thing in wmemVEC[B]", {inst_lib_t::InstProperty::BEGIN_FLOW});
+  inst_lib->AddInst("If-Tag", hardware_t::Inst_If, 1, "Execute next flow if(wmemANY[A]) // To be true, mem loc must be non-zero number", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("IfNot-Tag", hardware_t::Inst_IfNot, 1, "Execute next flow if(!wmemANY[A])", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("While-Tag", hardware_t::Inst_While, 1, "While loop over wmemANY[A]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Countdown-Tag", hardware_t::Inst_Countdown, 1, "Countdown loop with wmemANY as index.", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
   
   // The below instructions take no arguments, check if instruction in library first.
   if (!inst_lib->IsInst("Close")) {
@@ -1221,8 +1306,12 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_TagArgs() {
   }
 
   if (USE_MODULES) {
-    inst_lib->AddInst("Call-Tag", hardware_t::Inst_Call, 1, "Call module using A for tag-based reference");
-    inst_lib->AddInst("Routine-Tag", hardware_t::Inst_Routine, 1, "Call module as a routine (don't use call stack)");
+    inst_lib->AddInst("Input-Tag", hardware_t::Inst_Input, 2, "wmemANY[B] = imemANY[A]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+    inst_lib->AddInst("Output-Tag", hardware_t::Inst_Output, 2, "omemANY[B] = wmemANY[A]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+    inst_lib->AddInst("CommitGlobal-Tag", hardware_t::Inst_CommitGlobal, 2, "gmemANY[B] = wmemANY[A]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+    inst_lib->AddInst("PullGlobal-Tag", hardware_t::Inst_PullGlobal, 2, "wmemANY[B] = gmemANY[A]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+    inst_lib->AddInst("Call-Tag", hardware_t::Inst_Call, 1, "Call module using A for tag-based reference", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+    inst_lib->AddInst("Routine-Tag", hardware_t::Inst_Routine, 1, "Call module as a routine (don't use call stack)", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
     if (!inst_lib->IsInst("ModuleDef")) {
       inst_lib->AddInst("ModuleDef", hardware_t::Inst_Nop, 1, "Define module with tag A", {inst_lib_t::InstProperty::MODULE});
     }
@@ -1248,37 +1337,29 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_NumArgs() {
   //   Not
   //   Inc
   //   Dec
-  inst_lib->AddInst("Add-Num", hardware_t::Inst_Add__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] + wmemNUM[B]");
-  inst_lib->AddInst("Sub-Num", hardware_t::Inst_Sub__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] - wmemNUM[B]");
-  inst_lib->AddInst("Mult-Num", hardware_t::Inst_Mult__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] * wmemNUM[B]");
-  inst_lib->AddInst("Div-Num", hardware_t::Inst_Div__NUM_ARGS, 3, "if (wmemNUM[B] != 0) wmemANY[C] = wmemNUM[A] / wmemNUM[B]; else NOP");
-  inst_lib->AddInst("Mod-Num", hardware_t::Inst_Mod__NUM_ARGS, 3, "if (wmemNUM[B] != 0) wmemANY[C] = int(wmemNUM[A]) % int(wmemNUM[B]); else NOP");
-  inst_lib->AddInst("TestNumEqu-Num", hardware_t::Inst_TestNumEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] == wmemNUM[B]");
-  inst_lib->AddInst("TestNumNEqu-Num", hardware_t::Inst_TestNumNEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] != wmemNUM[B]");
-  inst_lib->AddInst("TestNumLess-Num", hardware_t::Inst_TestNumLess__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] < wmemNUM[B]");
-  inst_lib->AddInst("TestNumLessTEqu-Num", hardware_t::Inst_TestNumLessTEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] <= wmemNUM[B]");
-  inst_lib->AddInst("TestNumGreater-Num", hardware_t::Inst_TestNumGreater__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] > wmemNUM[B]");
-  inst_lib->AddInst("TestNumGreaterTEqu-Num", hardware_t::Inst_TestNumGreaterTEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] >= wmemNUM[B]");
-  inst_lib->AddInst("Floor-Num", hardware_t::Inst_Floor__NUM_ARGS, 1, "wmemNUM[A] = floor(wmemNUM[A])");
-  inst_lib->AddInst("Not-Num", hardware_t::Inst_Not__NUM_ARGS, 1, "wmemNUM[A] = !wmemNUM[A]"); 
-  inst_lib->AddInst("Inc-Num", hardware_t::Inst_Inc__NUM_ARGS, 1, "wmemNUM[A] = wmemNUM[A] + 1");
-  inst_lib->AddInst("Dec-Num", hardware_t::Inst_Dec__NUM_ARGS, 1, "wmemNUM[A] = wmemNUM[A] - 1");
+  inst_lib->AddInst("Add-Num", hardware_t::Inst_Add__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] + wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Sub-Num", hardware_t::Inst_Sub__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] - wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Mult-Num", hardware_t::Inst_Mult__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] * wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Div-Num", hardware_t::Inst_Div__NUM_ARGS, 3, "if (wmemNUM[B] != 0) wmemANY[C] = wmemNUM[A] / wmemNUM[B]; else NOP", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Mod-Num", hardware_t::Inst_Mod__NUM_ARGS, 3, "if (wmemNUM[B] != 0) wmemANY[C] = int(wmemNUM[A]) % int(wmemNUM[B]); else NOP", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("TestNumEqu-Num", hardware_t::Inst_TestNumEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] == wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("TestNumNEqu-Num", hardware_t::Inst_TestNumNEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] != wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("TestNumLess-Num", hardware_t::Inst_TestNumLess__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] < wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("TestNumLessTEqu-Num", hardware_t::Inst_TestNumLessTEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] <= wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("TestNumGreater-Num", hardware_t::Inst_TestNumGreater__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] > wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("TestNumGreaterTEqu-Num", hardware_t::Inst_TestNumGreaterTEqu__NUM_ARGS, 3, "wmemANY[C] = wmemNUM[A] >= wmemNUM[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Floor-Num", hardware_t::Inst_Floor__NUM_ARGS, 1, "wmemNUM[A] = floor(wmemNUM[A])", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Not-Num", hardware_t::Inst_Not__NUM_ARGS, 1, "wmemNUM[A] = !wmemNUM[A]", {inst_prop_t::NUM_ARGS}); 
+  inst_lib->AddInst("Inc-Num", hardware_t::Inst_Inc__NUM_ARGS, 1, "wmemNUM[A] = wmemNUM[A] + 1", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Dec-Num", hardware_t::Inst_Dec__NUM_ARGS, 1, "wmemNUM[A] = wmemNUM[A] - 1", {inst_prop_t::NUM_ARGS});
 
   // - Memory-related instructions -
   //   CopyMem
   //   SwapMem
   //   Input
   //   Output
-  //   CommitGlobal
-  //   PullGlobal
-  inst_lib->AddInst("CopyMem-Num", hardware_t::Inst_CopyMem__NUM_ARGS, 2, "wmemANY[B] = wmemANY[A] // Copy mem[A] to mem[B]");
-  inst_lib->AddInst("SwapMem-Num", hardware_t::Inst_SwapMem__NUM_ARGS, 2, "swap(wmemANY[A], wmemANY[B])");
-  inst_lib->AddInst("Input-Num", hardware_t::Inst_Input__NUM_ARGS, 2, "wmemANY[B] = imemANY[A]");
-  inst_lib->AddInst("Output-Num", hardware_t::Inst_Output__NUM_ARGS, 2, "omemANY[B] = wmemANY[A]");
-  inst_lib->AddInst("CommitGlobal-Num", hardware_t::Inst_CommitGlobal__NUM_ARGS, 2, "gmemANY[B] = wmemANY[A]");
-  inst_lib->AddInst("PullGlobal-Num", hardware_t::Inst_PullGlobal__NUM_ARGS, 2, "wmemANY[B] = gmemANY[A]");
-  // inst_lib->AddInst("TestMemEqu-Num", hardware_t::Inst_TestMemEqu__NUM_ARGS, 3, "wmemANY[C] = wmemANY[A] == wmemANY[B]");
-  // inst_lib->AddInst("TestMemNEqu-Num", hardware_t::Inst_TestMemNEqu__NUM_ARGS, 3, "wmemANY[C] = wmemANY[A] != wmemANY[B]");
+  inst_lib->AddInst("CopyMem-Num", hardware_t::Inst_CopyMem__NUM_ARGS, 2, "wmemANY[B] = wmemANY[A] // Copy mem[A] to mem[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("SwapMem-Num", hardware_t::Inst_SwapMem__NUM_ARGS, 2, "swap(wmemANY[A], wmemANY[B])", {inst_prop_t::NUM_ARGS});
 
   // - Non-module flow control instructions -
   //   If
@@ -1287,11 +1368,10 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_NumArgs() {
   //   Countdown
   //   Close
   //   Break
-  inst_lib->AddInst("If-Num", hardware_t::Inst_If__NUM_ARGS, 1, "Execute next flow if(wmemANY[A]) // To be true, mem loc must be non-zero number", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  inst_lib->AddInst("IfNot-Num", hardware_t::Inst_IfNot__NUM_ARGS, 1, "Execute next flow if(!wmemANY[A])", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  inst_lib->AddInst("While-Num", hardware_t::Inst_While__NUM_ARGS, 1, "While loop over wmemANY[A]", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  inst_lib->AddInst("Countdown-Num", hardware_t::Inst_Countdown__NUM_ARGS, 1, "Countdown loop with wmemANY as index.", {inst_lib_t::InstProperty::BEGIN_FLOW});
-  // inst_lib->AddInst("Foreach-Num", hardware_t::Inst_Foreach__NUM_ARGS, 2, "For each thing in wmemVEC[B]", {inst_lib_t::InstProperty::BEGIN_FLOW});
+  inst_lib->AddInst("If-Num", hardware_t::Inst_If__NUM_ARGS, 1, "Execute next flow if(wmemANY[A]) // To be true, mem loc must be non-zero number", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("IfNot-Num", hardware_t::Inst_IfNot__NUM_ARGS, 1, "Execute next flow if(!wmemANY[A])", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("While-Num", hardware_t::Inst_While__NUM_ARGS, 1, "While loop over wmemANY[A]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Countdown-Num", hardware_t::Inst_Countdown__NUM_ARGS, 1, "Countdown loop with wmemANY as index.", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
   
   // The below instructions take no arguments, check if instruction in library first.
   if (!inst_lib->IsInst("Close")) {
@@ -1305,7 +1385,14 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_NumArgs() {
   }
 
   // todo - numeric argument module instructions(?)
-
+  if (USE_MODULES) {
+    std::cout << "Not implemented yet!" << std::endl;
+    exit(-1);
+    inst_lib->AddInst("Input-Num", hardware_t::Inst_Input__NUM_ARGS, 2, "wmemANY[B] = imemANY[A]", {inst_prop_t::NUM_ARGS});
+    inst_lib->AddInst("Output-Num", hardware_t::Inst_Output__NUM_ARGS, 2, "omemANY[B] = wmemANY[A]", {inst_prop_t::NUM_ARGS});
+    inst_lib->AddInst("CommitGlobal-Num", hardware_t::Inst_CommitGlobal__NUM_ARGS, 2, "gmemANY[B] = wmemANY[A]", {inst_prop_t::NUM_ARGS});
+    inst_lib->AddInst("PullGlobal-Num", hardware_t::Inst_PullGlobal__NUM_ARGS, 2, "wmemANY[B] = gmemANY[A]", {inst_prop_t::NUM_ARGS});
+  }
 }
 
 /// Add numeric terminals
@@ -1342,8 +1429,7 @@ void ProgramSynthesisExperiment::AddNumericTerminals_TagArgs(size_t min, size_t 
         size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
         if (!hw.IsValidMemPos(posA)) return; // Do nothing
         wmem.Set(posA, (double)i);
-      }
-    );
+      }, 1, "Terminal value " + emp::to_string(i), {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
   }
 }
 
@@ -1365,8 +1451,7 @@ void ProgramSynthesisExperiment::AddNumericTerminals_NumArgs(size_t min, size_t 
         size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(posA)) return;
         
         wmem.Set(posA, (double)i);
-      }
-    );
+      }, 1, "Terminal value " + emp::to_string(i), {inst_prop_t::NUM_ARGS});
   }
 }
 
@@ -1441,25 +1526,25 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
   // todo - add load and submit instructions (all types)
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadDouble-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__TAG_ARGS(hw, inst); }, 1, "LoadInt-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadDouble-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__TAG_ARGS(hw, inst); }, 1, "LoadDouble-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadDouble-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__NUM_ARGS(hw, inst); }, 1, "LoadInt-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadDouble-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__NUM_ARGS(hw, inst); }, 1, "LoadDouble-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadDouble-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__TAG_ARGS(hw, inst); }, 1, "LoadInt-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadDouble-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__TAG_ARGS(hw, inst); }, 1, "LoadDouble-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
 
-      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadDouble-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_NumberIO__NUM_ARGS(hw, inst); }, 1, "LoadInt-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadDouble-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadDouble_NumberIO__NUM_ARGS(hw, inst); }, 1, "LoadDouble-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_NumberIO__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
   }
@@ -1532,16 +1617,16 @@ void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {
   inst_lib->AddInst("SubmitNone", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNone_SmallOrLarge(hw, inst); }, 0);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__TAG_ARGS(hw, inst); }, 1, "LoadInt-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__NUM_ARGS(hw, inst); }, 1, "LoadInt-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadInt-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__TAG_ARGS(hw, inst); }, 1, "LoadInt-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadInt-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadInt_SmallOrLarge__NUM_ARGS(hw, inst); }, 1, "LoadInt-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
   }
@@ -1614,29 +1699,29 @@ void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
 
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-      inst_lib->AddInst("LoadStart-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadEnd-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadStep-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStart-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "LoadStart-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadEnd-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "LoadEnd-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadStep-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "LoadStep-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-      inst_lib->AddInst("LoadStart-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadEnd-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadStep-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStart-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "LoadStart-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadEnd-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "LoadEnd-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadStep-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "LoadStep-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-      inst_lib->AddInst("LoadStart-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadEnd-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadStep-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStart-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "LoadStart-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadEnd-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "LoadEnd-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadStep-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "LoadStep-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
       
-      inst_lib->AddInst("LoadStart-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadEnd-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadStep-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadStart-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStart_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "LoadStart-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadEnd-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadEnd_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "LoadEnd-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadStep-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStep_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "LoadStep-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_ForLoopIndex__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
   }
@@ -2203,33 +2288,33 @@ void ProgramSynthesisExperiment::SetupProblem_Grade() {
 
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-      inst_lib->AddInst("LoadThreshA-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshB-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshC-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshD-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadGrade-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshA-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshA-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadThreshB-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshB-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadThreshC-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshC-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadThreshD-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshD-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadGrade-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__TAG_ARGS(hw, inst); }, 1, "LoadGrade-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-      inst_lib->AddInst("LoadThreshA-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshB-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshC-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshD-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadGrade-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshA-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshA-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadThreshB-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshB-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadThreshC-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshC-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadThreshD-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshD-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadGrade-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__NUM_ARGS(hw, inst); }, 1, "LoadGrade-Num", {inst_prop_t::NUM_ARGS}); 
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-      inst_lib->AddInst("LoadThreshA-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshB-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshC-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshD-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__TAG_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadGrade-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__TAG_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshA-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshA-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadThreshB-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshB-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadThreshC-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshC-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadThreshD-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__TAG_ARGS(hw, inst); }, 1, "LoadThreshD-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      inst_lib->AddInst("LoadGrade-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__TAG_ARGS(hw, inst); }, 1, "LoadGrade-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
 
-      inst_lib->AddInst("LoadThreshA-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshB-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshC-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadThreshD-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__NUM_ARGS(hw, inst); }, 1); 
-      inst_lib->AddInst("LoadGrade-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__NUM_ARGS(hw, inst); }, 1); 
+      inst_lib->AddInst("LoadThreshA-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshA_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshA-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadThreshB-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshB_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshB-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadThreshC-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshC_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshC-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadThreshD-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadThreshD_Grade__NUM_ARGS(hw, inst); }, 1, "LoadThreshD-Num", {inst_prop_t::NUM_ARGS}); 
+      inst_lib->AddInst("LoadGrade-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadGrade_Grade__NUM_ARGS(hw, inst); }, 1, "LoadGrade-Num", {inst_prop_t::NUM_ARGS}); 
       break;
     }
   }
@@ -2301,29 +2386,29 @@ void ProgramSynthesisExperiment::SetupProblem_Median() {
   AddNumericTerminals(0, 16);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__TAG_ARGS(hw, inst); }, 1, "LoadNum1-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__TAG_ARGS(hw, inst); }, 1, "LoadNum2-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__TAG_ARGS(hw, inst); }, 1, "LoadNum3-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__NUM_ARGS(hw, inst); }, 1, "LoadNum1-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__NUM_ARGS(hw, inst); }, 1, "LoadNum2-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__NUM_ARGS(hw, inst); }, 1, "LoadNum3-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__TAG_ARGS(hw, inst); }, 1, "LoadNum1-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__TAG_ARGS(hw, inst); }, 1, "LoadNum2-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__TAG_ARGS(hw, inst); }, 1, "LoadNum3-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
       
-      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Median__NUM_ARGS(hw, inst); }, 1, "LoadNum1-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Median__NUM_ARGS(hw, inst); }, 1, "LoadNum2-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Median__NUM_ARGS(hw, inst); }, 1, "LoadNum3-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Median__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
   }
@@ -2397,33 +2482,33 @@ void ProgramSynthesisExperiment::SetupProblem_Smallest() {
 
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum4-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum1-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum2-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum3-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum4-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum4-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum4-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum1-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum2-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum3-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum4-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum4-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum4-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__TAG_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__TAG_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum1-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum2-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum3-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum3-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("LoadNum4-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__TAG_ARGS(hw, inst); }, 1, "LoadNum4-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__TAG_ARGS(hw, inst); }, 1, "SubmitNum-Tag", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
 
-      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("LoadNum4-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__NUM_ARGS(hw, inst); }, 1);
-      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__NUM_ARGS(hw, inst); }, 1);
+      inst_lib->AddInst("LoadNum1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum1_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum1-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum2_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum2-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum3-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum3_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum3-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("LoadNum4-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadNum4_Smallest__NUM_ARGS(hw, inst); }, 1, "LoadNum4-Num", {inst_prop_t::NUM_ARGS});
+      inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_Smallest__NUM_ARGS(hw, inst); }, 1, "SubmitNum-Num", {inst_prop_t::NUM_ARGS});
       break;
     }
   }
