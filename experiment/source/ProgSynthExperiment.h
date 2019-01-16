@@ -215,6 +215,7 @@ private:
   int SEED;
   size_t GENERATIONS;
   size_t PROGRAM_ARGUMENT_MODE;
+  bool PROGRAM_ARGUMENTS_TYPE_SEARCH;
   size_t PROG_POP_SIZE;
   std::string PROBLEM;
   std::string BENCHMARK_DATA_DIR;
@@ -433,14 +434,17 @@ private:
   void AddDefaultInstructions_TagArgs();
   void AddDefaultInstructions_TagArgs_NoTypeSearch();
   void AddDefaultInstructions_NumArgs();
+  void AddDefaultInstructions_NumArgs_WithTypeSearch();
 
   void AddVectorInstructions_TagArgs();
   void AddVectorInstructions_TagArgs_NoTypeSearch();
   void AddVectorInstructions_NumArgs();
+  void AddVectorInstructions_NumArgs_WithTypeSearch();
 
   void AddStringInstructions_TagArgs();
   void AddStringInstructions_TagArgs_NoTypeSearch();
   void AddStringInstructions_NumArgs();
+  void AddStringInstructions_NumArgs_WithTypeSearch();
 
   void AddNumericTerminals(size_t min, size_t max);
   void AddNumericTerminals_TagArgs(size_t min, size_t max);
@@ -1134,6 +1138,7 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
   SEED = config.SEED();
   GENERATIONS = config.GENERATIONS();
   PROGRAM_ARGUMENT_MODE = config.PROGRAM_ARGUMENT_MODE();
+  PROGRAM_ARGUMENTS_TYPE_SEARCH = config.PROGRAM_ARGUMENTS_TYPE_SEARCH();
   PROG_POP_SIZE = config.PROG_POP_SIZE();
   PROBLEM = config.PROBLEM();
   BENCHMARK_DATA_DIR = config.BENCHMARK_DATA_DIR();
@@ -1227,16 +1232,23 @@ void ProgramSynthesisExperiment::AddDefaultInstructions() {
   std::cout << "Adding DEFAULT instructions to instruction set." << std::endl;
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-      AddDefaultInstructions_TagArgs();
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) { AddDefaultInstructions_TagArgs(); } 
+      else { AddDefaultInstructions_TagArgs_NoTypeSearch(); }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-      AddDefaultInstructions_NumArgs();
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) { AddDefaultInstructions_NumArgs_WithTypeSearch(); }
+      else { AddDefaultInstructions_NumArgs(); }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-      AddDefaultInstructions_NumArgs();
-      AddDefaultInstructions_TagArgs();
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        AddDefaultInstructions_TagArgs();
+        AddDefaultInstructions_NumArgs_WithTypeSearch();
+      } else {
+        AddDefaultInstructions_TagArgs_NoTypeSearch();
+        AddDefaultInstructions_NumArgs();
+      }
       break;
     }
     default: {
@@ -1301,6 +1313,62 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_TagArgs() {
   }
 }
 
+/// Add instructions (expecting tag arguments)
+void ProgramSynthesisExperiment::AddDefaultInstructions_TagArgs_NoTypeSearch() {
+  std::cout << "Adding default TAG-BASED ARGUMENT instructions WITHOUT TYPE SEARCHING." << std::endl;
+  // - Numeric-related instructions -
+  inst_lib->AddInst("Add-Tag", hardware_t::Inst_Add__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] + wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Sub-Tag", hardware_t::Inst_Sub__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] - wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Mult-Tag", hardware_t::Inst_Mult__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] * wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Div-Tag", hardware_t::Inst_Div__TAG_ARGS_NO_TYPE_SEARCH, 3, "if (wmemNUM[B] != 0) wmemANY[C] = wmemNUM[A] / wmemNUM[B]; else NOP", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Mod-Tag", hardware_t::Inst_Mod__TAG_ARGS_NO_TYPE_SEARCH, 3, "if (wmemNUM[B] != 0) wmemANY[C] = int(wmemNUM[A]) % int(wmemNUM[B]); else NOP", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("TestNumEqu-Tag", hardware_t::Inst_TestNumEqu__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] == wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("TestNumNEqu-Tag", hardware_t::Inst_TestNumNEqu__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] != wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("TestNumLess-Tag", hardware_t::Inst_TestNumLess__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] < wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("TestNumLessTEqu-Tag", hardware_t::Inst_TestNumLessTEqu__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] <= wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("TestNumGreater-Tag", hardware_t::Inst_TestNumGreater__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] > wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("TestNumGreaterTEqu-Tag", hardware_t::Inst_TestNumGreaterTEqu__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] >= wmemNUM[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Floor-Tag", hardware_t::Inst_Floor__TAG_ARGS_NO_TYPE_SEARCH, 1, "wmemNUM[A] = floor(wmemNUM[A])", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Not-Tag", hardware_t::Inst_Not__TAG_ARGS_NO_TYPE_SEARCH, 1, "wmemNUM[A] = !wmemNUM[A]", {inst_prop_t::TAG_ARGS}); 
+  inst_lib->AddInst("Inc-Tag", hardware_t::Inst_Inc__TAG_ARGS_NO_TYPE_SEARCH, 1, "wmemNUM[A] = wmemNUM[A] + 1", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Dec-Tag", hardware_t::Inst_Dec__TAG_ARGS_NO_TYPE_SEARCH, 1, "wmemNUM[A] = wmemNUM[A] - 1", {inst_prop_t::TAG_ARGS});
+
+  // - Memory-related instructions - (these don't check type)
+  inst_lib->AddInst("CopyMem-Tag", hardware_t::Inst_CopyMem, 2, "wmemANY[B] = wmemANY[A] // Copy mem[A] to mem[B]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("SwapMem-Tag", hardware_t::Inst_SwapMem, 2, "swap(wmemANY[A], wmemANY[B])", {inst_prop_t::TAG_ARGS});
+
+  // - Non-module flow control instructions - (these don't check type)
+  inst_lib->AddInst("If-Tag", hardware_t::Inst_If, 1, "Execute next flow if(wmemANY[A]) // To be true, mem loc must be non-zero number", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("IfNot-Tag", hardware_t::Inst_IfNot, 1, "Execute next flow if(!wmemANY[A])", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("While-Tag", hardware_t::Inst_While, 1, "While loop over wmemANY[A]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Countdown-Tag", hardware_t::Inst_Countdown, 1, "Countdown loop with wmemANY as index.", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS});
+  
+  // The below instructions take no arguments, check if instruction in library first.
+  if (!inst_lib->IsInst("Close")) {
+    inst_lib->AddInst("Close", hardware_t::Inst_Close, 0, "Close flow", {inst_lib_t::InstProperty::END_FLOW});
+  }
+  if (!inst_lib->IsInst("Break")) {
+    inst_lib->AddInst("Break", hardware_t::Inst_Break, 0, "Break current flow");
+  }
+  if (!inst_lib->IsInst("Return")) {
+    inst_lib->AddInst("Return", hardware_t::Inst_Return, 0, "Return from current routine/call");
+  }
+
+  // Add multi-type instructions (instructions that are only necessary if using multiple types)
+  if (USES_VECTOR_INSTRUCTIONS) {
+    AddVectorInstructions_TagArgs_NoTypeSearch();
+  }
+  if (USES_STRING_INSTRUCTIONS) {
+    AddStringInstructions_TagArgs_NoTypeSearch();
+  }
+  if (USES_STRING_INSTRUCTIONS || USES_VECTOR_INSTRUCTIONS) {
+    inst_lib->AddInst("IsNum-Tag", hardware_t::Inst_IsNum, 2, "wmemANY[B] = IsNum(wmemANY[A])", {inst_prop_t::TAG_ARGS});
+    inst_lib->AddInst("TestMemEqu-Tag", hardware_t::Inst_TestMemEqu, 3, "wmemANY[C] = wmemANY[A] == wmemANY[B]", {inst_prop_t::TAG_ARGS});
+    inst_lib->AddInst("TestMemNEqu-Tag", hardware_t::Inst_TestMemNEqu, 3, "wmemANY[C] = wmemANY[A] != wmemANY[B]", {inst_prop_t::TAG_ARGS});
+  }
+}
+
+
 /// Add instructions (expecting numeric arguments) that are shared across all problems.
 void ProgramSynthesisExperiment::AddDefaultInstructions_NumArgs() {
   std::cout << "Adding default NUMERIC ARGUMENT instructions." << std::endl;
@@ -1356,10 +1424,65 @@ void ProgramSynthesisExperiment::AddDefaultInstructions_NumArgs() {
   }
 }
 
+/// Add instructions
+void ProgramSynthesisExperiment::AddDefaultInstructions_NumArgs_WithTypeSearch() {
+  std::cout << "Adding default NUMERIC ARGUMENT instructions." << std::endl;
+  // - Numeric-related instructions -
+  inst_lib->AddInst("Add-Num", hardware_t::Inst_Add__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] + wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Sub-Num", hardware_t::Inst_Sub__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] - wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Mult-Num", hardware_t::Inst_Mult__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] * wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Div-Num", hardware_t::Inst_Div__NUM_ARGS_WITH_TYPE_SEARCH, 3, "if (wmemNUM[B] != 0) wmemANY[C] = wmemNUM[A] / wmemNUM[B]; else NOP", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Mod-Num", hardware_t::Inst_Mod__NUM_ARGS_WITH_TYPE_SEARCH, 3, "if (wmemNUM[B] != 0) wmemANY[C] = int(wmemNUM[A]) % int(wmemNUM[B]); else NOP", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumEqu-Num", hardware_t::Inst_TestNumEqu__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] == wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumNEqu-Num", hardware_t::Inst_TestNumNEqu__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] != wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumLess-Num", hardware_t::Inst_TestNumLess__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] < wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumLessTEqu-Num", hardware_t::Inst_TestNumLessTEqu__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] <= wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumGreater-Num", hardware_t::Inst_TestNumGreater__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] > wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("TestNumGreaterTEqu-Num", hardware_t::Inst_TestNumGreaterTEqu__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = wmemNUM[A] >= wmemNUM[B]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Floor-Num", hardware_t::Inst_Floor__NUM_ARGS_WITH_TYPE_SEARCH, 1, "wmemNUM[A] = floor(wmemNUM[A])", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Not-Num", hardware_t::Inst_Not__NUM_ARGS_WITH_TYPE_SEARCH, 1, "wmemNUM[A] = !wmemNUM[A]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Inc-Num", hardware_t::Inst_Inc__NUM_ARGS_WITH_TYPE_SEARCH, 1, "wmemNUM[A] = wmemNUM[A] + 1", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Dec-Num", hardware_t::Inst_Dec__NUM_ARGS_WITH_TYPE_SEARCH, 1, "wmemNUM[A] = wmemNUM[A] - 1", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+
+  // - Memory-related instructions - (type-agnostic)
+  inst_lib->AddInst("CopyMem-Num", hardware_t::Inst_CopyMem__NUM_ARGS, 2, "wmemANY[B] = wmemANY[A] // Copy mem[A] to mem[B]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("SwapMem-Num", hardware_t::Inst_SwapMem__NUM_ARGS, 2, "swap(wmemANY[A], wmemANY[B])", {inst_prop_t::NUM_ARGS});
+
+  // - Non-module flow control instructions - (type-agnostic)
+  inst_lib->AddInst("If-Num", hardware_t::Inst_If__NUM_ARGS, 1, "Execute next flow if(wmemANY[A]) // To be true, mem loc must be non-zero number", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("IfNot-Num", hardware_t::Inst_IfNot__NUM_ARGS, 1, "Execute next flow if(!wmemANY[A])", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("While-Num", hardware_t::Inst_While__NUM_ARGS, 1, "While loop over wmemANY[A]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("Countdown-Num", hardware_t::Inst_Countdown__NUM_ARGS, 1, "Countdown loop with wmemANY as index.", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
+  
+  // The below instructions take no arguments, check if instruction in library first.
+  if (!inst_lib->IsInst("Close")) {
+    inst_lib->AddInst("Close", hardware_t::Inst_Close, 0, "Close flow", {inst_lib_t::InstProperty::END_FLOW});
+  }
+  if (!inst_lib->IsInst("Break")) {
+    inst_lib->AddInst("Break", hardware_t::Inst_Break, 0, "Break current flow");
+  }
+  if (!inst_lib->IsInst("Return")) {
+    inst_lib->AddInst("Return", hardware_t::Inst_Return, 0, "Return from current routine/call");
+  }
+
+  // Add multi-type instructions (instructions that are only necessary if using multiple types)
+  if (USES_VECTOR_INSTRUCTIONS) {
+    AddVectorInstructions_NumArgs_WithTypeSearch();
+  }
+  if (USES_STRING_INSTRUCTIONS) {
+    AddStringInstructions_NumArgs_WithTypeSearch();
+  }
+  if (USES_STRING_INSTRUCTIONS || USES_VECTOR_INSTRUCTIONS) {
+    inst_lib->AddInst("IsNum-Num", hardware_t::Inst_IsNum__NUM_ARGS, 2, "wmemANY[B] = IsNum(wmemANY[A])", {inst_prop_t::NUM_ARGS});
+    inst_lib->AddInst("TestMemEqu-Num", hardware_t::Inst_TestMemEqu__NUM_ARGS, 3, "wmemANY[C] = wmemANY[A] == wmemANY[B]", {inst_prop_t::NUM_ARGS});
+    inst_lib->AddInst("TestMemNEqu-Num", hardware_t::Inst_TestMemNEqu__NUM_ARGS, 3, "wmemANY[C] = wmemANY[A] != wmemANY[B]", {inst_prop_t::NUM_ARGS});
+  }
+}
+
 /// Add vector instructions (expecting tag arguments)
 void ProgramSynthesisExperiment::AddVectorInstructions_TagArgs() {
   inst_lib->AddInst("IsVec-Tag", hardware_t::Inst_IsVec, 2, "wmemANY[B] = IsVec(wmemANY[A])", {inst_prop_t::TAG_ARGS});
-  inst_lib->AddInst("MakeVector-Tag", hardware_t::Inst_MakeVector, 3, "wmemANY[C]=Vector([wmemANY[min(A,B),max(A,B)])", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("MakeVector-Tag", hardware_t::Inst_MakeVector, 3, "wmemANY[C]=Vector([wmemANY[min(A,B),max(A,B)])", {inst_prop_t::TAG_ARGS});
   inst_lib->AddInst("VecGet-Tag", hardware_t::Inst_VecGet, 3, "wmemANY[C]=wmemVEC[A][wmemNUM[B]]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
   inst_lib->AddInst("VecSet-Tag", hardware_t::Inst_VecSet, 3, "wmemVEC[A][wmemNUM[B]]=wmemNUM/STR[C]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
   inst_lib->AddInst("VecLen-Tag", hardware_t::Inst_VecLen, 2, "wmemANY[B]=wmemVEC[A]", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
@@ -1376,10 +1499,30 @@ void ProgramSynthesisExperiment::AddVectorInstructions_TagArgs() {
   inst_lib->AddInst("Foreach-Tag", hardware_t::Inst_Foreach, 2, "For each thing in wmemVEC[B]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
 }
 
+void ProgramSynthesisExperiment::AddVectorInstructions_TagArgs_NoTypeSearch() {
+  inst_lib->AddInst("IsVec-Tag", hardware_t::Inst_IsVec, 2, "wmemANY[B] = IsVec(wmemANY[A])", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("MakeVector-Tag", hardware_t::Inst_MakeVector, 3, "wmemANY[C]=Vector([wmemANY[min(A,B),max(A,B)])", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecGet-Tag", hardware_t::Inst_VecGet__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C]=wmemVEC[A][wmemNUM[B]]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecSet-Tag", hardware_t::Inst_VecSet__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemVEC[A][wmemNUM[B]]=wmemNUM/STR[C]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecLen-Tag", hardware_t::Inst_VecLen__TAG_ARGS_NO_TYPE_SEARCH, 2, "wmemANY[B]=wmemVEC[A]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecAppend-Tag", hardware_t::Inst_VecAppend__TAG_ARGS_NO_TYPE_SEARCH, 2, "wmemVEC[A].Append(wmemNUM/STR[B])", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecPop-Tag", hardware_t::Inst_VecPop__TAG_ARGS_NO_TYPE_SEARCH, 2, "wmemANY[B]=wmemVEC[A].pop()", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecRemove-Tag", hardware_t::Inst_VecRemove__TAG_ARGS_NO_TYPE_SEARCH, 2, "wmemVEC[A].Remove(wmemNUM[B])", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecReplaceAll-Tag", hardware_t::Inst_VecReplaceAll__TAG_ARGS_NO_TYPE_SEARCH, 3, "Replace all values (wmemNUM/STR[B]) in wmemVEC[A] with wmemNUM/STR[C]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecIndexOf-Tag", hardware_t::Inst_VecIndexOf__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C] = index of wmemNUM/STR[B] in wmemVEC[A]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecOccurrencesOf-Tag", hardware_t::Inst_VecOccurrencesOf__TAG_ARGS_NO_TYPE_SEARCH, 3, "wmemANY[C]= occurrances of wmemNUM/STR[B] in wmemVEC[A]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecReverse-Tag", hardware_t::Inst_VecReverse__TAG_ARGS_NO_TYPE_SEARCH, 1, "wmemVEC[A] = Reverse(wmemVEC[A])", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecSwapIfLess-Tag", hardware_t::Inst_VecSwapIfLess__TAG_ARGS_NO_TYPE_SEARCH, 3, "Swap two indices in wmemVEC[A] if vec[wmemNUM[A]] < vec[wmemNUM[B]].", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecGetFront-Tag", hardware_t::Inst_VecGetFront__TAG_ARGS_NO_TYPE_SEARCH, 2, "wmemANY[B] = front of wmemVEC[A]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("VecGetBack-Tag", hardware_t::Inst_VecGetBack__TAG_ARGS_NO_TYPE_SEARCH, 2, "wmemANY[B] = back of wmemVEC[A]", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("Foreach-Tag", hardware_t::Inst_Foreach__TAG_ARGS_NO_TYPE_SEARCH, 2, "For each thing in wmemVEC[B]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::TAG_ARGS});
+
+}
+
 /// Add vector-specific instructions (expecting numeric arguments)
 void ProgramSynthesisExperiment::AddVectorInstructions_NumArgs() {
   inst_lib->AddInst("IsVec-Num", hardware_t::Inst_IsVec__NUM_ARGS, 2, "wmemANY[B] = IsVec(wmemANY[A])", {inst_prop_t::NUM_ARGS});
-  inst_lib->AddInst("MakeVector-Num", hardware_t::Inst_MakeVector__NUM_ARGS, 3, "wmemANY[C]=Vector([wmemANY[min(A,B),max(A,B)])", {inst_prop_t::NUM_ARGS});  // TODO - more descriptio, {inst_prop_t::NUM_ARGSns
+  inst_lib->AddInst("MakeVector-Num", hardware_t::Inst_MakeVector__NUM_ARGS, 3, "wmemANY[C]=Vector([wmemANY[min(A,B),max(A,B)])", {inst_prop_t::NUM_ARGS});
   inst_lib->AddInst("VecGet-Num", hardware_t::Inst_VecGet__NUM_ARGS, 3, "wmemANY[C]=wmemVEC[A][wmemNUM[B]]", {inst_prop_t::NUM_ARGS});
   inst_lib->AddInst("VecSet-Num", hardware_t::Inst_VecSet__NUM_ARGS, 3, "wmemVEC[A][wmemNUM[B]]=wmemNUM/STR[C]", {inst_prop_t::NUM_ARGS});
   inst_lib->AddInst("VecLen-Num", hardware_t::Inst_VecLen__NUM_ARGS, 2, "wmemANY[B]=wmemVEC[A]", {inst_prop_t::NUM_ARGS});
@@ -1396,16 +1539,47 @@ void ProgramSynthesisExperiment::AddVectorInstructions_NumArgs() {
   inst_lib->AddInst("Foreach-Num", hardware_t::Inst_Foreach__NUM_ARGS, 2, "For each thing in wmemVEC[B]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS});
 }
 
+void ProgramSynthesisExperiment::AddVectorInstructions_NumArgs_WithTypeSearch() {
+  inst_lib->AddInst("IsVec-Num", hardware_t::Inst_IsVec__NUM_ARGS, 2, "wmemANY[B] = IsVec(wmemANY[A])", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("MakeVector-Num", hardware_t::Inst_MakeVector__NUM_ARGS, 3, "wmemANY[C]=Vector([wmemANY[min(A,B),max(A,B)])", {inst_prop_t::NUM_ARGS}); 
+  inst_lib->AddInst("VecGet-Num", hardware_t::Inst_VecGet__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C]=wmemVEC[A][wmemNUM[B]]", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("VecSet-Num", hardware_t::Inst_VecSet__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemVEC[A][wmemNUM[B]]=wmemNUM/STR[C]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecLen-Num", hardware_t::Inst_VecLen__NUM_ARGS_WITH_TYPE_SEARCH, 2, "wmemANY[B]=wmemVEC[A]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecAppend-Num", hardware_t::Inst_VecAppend__NUM_ARGS_WITH_TYPE_SEARCH, 2, "wmemVEC[A].Append(wmemNUM/STR[B])", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecPop-Num", hardware_t::Inst_VecPop__NUM_ARGS_WITH_TYPE_SEARCH, 2, "wmemANY[B]=wmemVEC[A].pop()", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecRemove-Num", hardware_t::Inst_VecRemove__NUM_ARGS_WITH_TYPE_SEARCH, 2, "wmemVEC[A].Remove(wmemNUM[B])", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecReplaceAll-Num", hardware_t::Inst_VecReplaceAll__NUM_ARGS_WITH_TYPE_SEARCH, 3, "Replace all values (wmemNUM/STR[B]) in wmemVEC[A] with wmemNUM/STR[C]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecIndexOf-Num", hardware_t::Inst_VecIndexOf__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C] = index of wmemNUM/STR[B] in wmemVEC[A]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecOccurrencesOf-Num", hardware_t::Inst_VecOccurrencesOf__NUM_ARGS_WITH_TYPE_SEARCH, 3, "wmemANY[C]= occurrances of wmemNUM/STR[B] in wmemVEC[A]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecReverse-Num", hardware_t::Inst_VecReverse__NUM_ARGS_WITH_TYPE_SEARCH, 1, "wmemVEC[A] = Reverse(wmemVEC[A])", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecSwapIfLess-Num", hardware_t::Inst_VecSwapIfLess__NUM_ARGS_WITH_TYPE_SEARCH, 3, "Swap two indices in wmemVEC[A] if vec[wmemNUM[A]] < vec[wmemNUM[B]].", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecGetFront-Num", hardware_t::Inst_VecGetFront__NUM_ARGS_WITH_TYPE_SEARCH, 2, "wmemANY[B] = front of wmemVEC[A]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("VecGetBack-Num", hardware_t::Inst_VecGetBack__NUM_ARGS_WITH_TYPE_SEARCH, 2, "wmemANY[B] = back of wmemVEC[A]", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("Foreach-Num", hardware_t::Inst_Foreach__NUM_ARGS_WITH_TYPE_SEARCH, 2, "For each thing in wmemVEC[B]", {inst_lib_t::InstProperty::BEGIN_FLOW, inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+}
+
 void ProgramSynthesisExperiment::AddStringInstructions_TagArgs() {
   inst_lib->AddInst("IsStr-Tag", hardware_t::Inst_IsStr, 2, "wmemANY[B] = IsStr(wmemANY[A])", {inst_prop_t::TAG_ARGS});
   inst_lib->AddInst("StrLength-Tag", hardware_t::Inst_StrLength, 2, "StrLength", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
   inst_lib->AddInst("StrConcat-Tag", hardware_t::Inst_StrConcat, 3, "StrConcat", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
 }
 
+void ProgramSynthesisExperiment::AddStringInstructions_TagArgs_NoTypeSearch() {
+  inst_lib->AddInst("IsStr-Tag", hardware_t::Inst_IsStr, 2, "wmemANY[B] = IsStr(wmemANY[A])", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("StrLength-Tag", hardware_t::Inst_StrLength__TAG_ARGS_NO_TYPE_SEARCH, 2, "StrLength", {inst_prop_t::TAG_ARGS});
+  inst_lib->AddInst("StrConcat-Tag", hardware_t::Inst_StrConcat__TAG_ARGS_NO_TYPE_SEARCH, 3, "StrConcat", {inst_prop_t::TAG_ARGS});
+}
+
 void ProgramSynthesisExperiment::AddStringInstructions_NumArgs() {
   inst_lib->AddInst("IsStr-Num", hardware_t::Inst_IsStr__NUM_ARGS, 2, "wmemANY[B] = IsStr(wmemANY[A])", {inst_prop_t::NUM_ARGS});
   inst_lib->AddInst("StrLength-Num", hardware_t::Inst_StrLength__NUM_ARGS, 2, "StrLength", {inst_prop_t::NUM_ARGS});
   inst_lib->AddInst("StrConcat-Num", hardware_t::Inst_StrConcat__NUM_ARGS, 3, "StrConcat", {inst_prop_t::NUM_ARGS});
+}
+
+void ProgramSynthesisExperiment::AddStringInstructions_NumArgs_WithTypeSearch() {
+  inst_lib->AddInst("IsStr-Num", hardware_t::Inst_IsStr__NUM_ARGS, 2, "wmemANY[B] = IsStr(wmemANY[A])", {inst_prop_t::NUM_ARGS});
+  inst_lib->AddInst("StrLength-Num", hardware_t::Inst_StrLength__NUM_ARGS_WITH_TYPE_SEARCH, 2, "StrLength", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+  inst_lib->AddInst("StrConcat-Num", hardware_t::Inst_StrConcat__NUM_ARGS_WITH_TYPE_SEARCH, 3, "StrConcat", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
 }
 
 /// Add numeric terminals
@@ -1444,12 +1618,6 @@ void ProgramSynthesisExperiment::AddNumericTerminals_TagArgs(size_t min, size_t 
         wmem.Set(posA, (double)i);
       }, 1, "Terminal value " + emp::to_string(i), {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
   }
-}
-
-void ProgramSynthesisExperiment::AddNumericTerminals_TagArgs_NoTypeSearch(size_t min, size_t max) {
-  // 
-  std::cout << "This isn't implemented!" << std::endl;
-  exit(-1);
 }
 
 void ProgramSynthesisExperiment::AddNumericTerminals_NumArgs(size_t min, size_t max) {
