@@ -2324,17 +2324,46 @@ void ProgramSynthesisExperiment::SetupProblem_StringLengthsBackwards() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  // todo
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      
+      inst_lib->AddInst("LoadStrVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStrVec_StringLengthsBackwards__TAG_ARGS(hw, inst); }, 1, "LoadStrVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__TAG_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
+
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      
+      inst_lib->AddInst("LoadStrVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStrVec_StringLengthsBackwards__NUM_ARGS(hw, inst); }, 1, "LoadStrVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__NUM_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
+
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      // Tag-based arguments
+      inst_lib->AddInst("LoadStrVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStrVec_StringLengthsBackwards__TAG_ARGS(hw, inst); }, 1, "LoadStrVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__TAG_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
+      // Numeric arguments
+      inst_lib->AddInst("LoadStrVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadStrVec_StringLengthsBackwards__NUM_ARGS(hw, inst); }, 1, "LoadStrVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_StringLengthsBackwards__NUM_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
   }
@@ -2408,17 +2437,42 @@ void ProgramSynthesisExperiment::SetupProblem_LastIndexOfZero() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  // todo
   std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
   exit(-1);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec_LastIndexOfZero__TAG_ARGS(hw, inst); }, 1, "LoadVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__TAG_ARGS(hw, inst); }, 1, "SubmitNum", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitNum", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec_LastIndexOfZero__NUM_ARGS(hw, inst); }, 1, "LoadVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitNum", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__NUM_ARGS(hw, inst); }, 1, "SubmitNum", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      // Tag-based arguments
+      inst_lib->AddInst("LoadVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec_LastIndexOfZero__TAG_ARGS(hw, inst); }, 1, "LoadVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__TAG_ARGS(hw, inst); }, 1, "SubmitNum", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitNum-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitNum", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
+      // Numeric arguments
+      inst_lib->AddInst("LoadVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec_LastIndexOfZero__NUM_ARGS(hw, inst); }, 1, "LoadVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitNum", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitNum-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitNum_LastIndexOfZero__NUM_ARGS(hw, inst); }, 1, "SubmitNum", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
   }
@@ -2498,17 +2552,49 @@ void ProgramSynthesisExperiment::SetupProblem_MirrorImage() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  // todo
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
+  inst_lib->AddInst("SubmitTrue", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitTrue_MirrorImage(hw, inst); }, 0, "SubmitTrue", {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+  inst_lib->AddInst("SubmitFalse", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitFalse_MirrorImage(hw, inst); }, 0, "SubmitFalse", {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+  
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadVec1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_MirrorImage__TAG_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_MirrorImage__TAG_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__TAG_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadVec1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_MirrorImage__NUM_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_MirrorImage__NUM_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__NUM_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      // Tag-based arguments
+      inst_lib->AddInst("LoadVec1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_MirrorImage__TAG_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_MirrorImage__TAG_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__TAG_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
+      // Numeric arguments
+      inst_lib->AddInst("LoadVec1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_MirrorImage__NUM_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_MirrorImage__NUM_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVal-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVal_MirrorImage__NUM_ARGS(hw, inst); }, 1, "SubmitVal", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }      
       break;
     }
   }
@@ -2673,17 +2759,44 @@ void ProgramSynthesisExperiment::SetupProblem_VectorsSummed() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  // todo
-  std::cout << "Problem-specific instructions not yet implemented. Exiting." << std::endl;
-  exit(-1);
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
+      inst_lib->AddInst("LoadVec1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_VectorsSummed__TAG_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_VectorsSummed__TAG_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__TAG_ARGS(hw, inst); }, 1, "SubmitVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
+      inst_lib->AddInst("LoadVec1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_VectorsSummed__NUM_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_VectorsSummed__NUM_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      } else {
+        inst_lib->AddInst("SubmitVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__NUM_ARGS(hw, inst); }, 1, "SubmitVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
       break;
     }
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
+      // Tag-based arguments
+      inst_lib->AddInst("LoadVec1-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_VectorsSummed__TAG_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_VectorsSummed__TAG_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__TAG_ARGS(hw, inst); }, 1, "SubmitVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_SEARCHING});
+      } else {
+        inst_lib->AddInst("SubmitVec-Tag", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__TAG_ARGS_NO_TYPE_SEARCH(hw, inst); }, 1, "SubmitVec", {inst_prop_t::TAG_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }
+      // Numeric arguments
+      inst_lib->AddInst("LoadVec1-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec1_VectorsSummed__NUM_ARGS(hw, inst); }, 1, "LoadVec1", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      inst_lib->AddInst("LoadVec2-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_LoadVec2_VectorsSummed__NUM_ARGS(hw, inst); }, 1, "LoadVec2", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+      if (PROGRAM_ARGUMENTS_TYPE_SEARCH) {
+        inst_lib->AddInst("SubmitVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__NUM_ARGS_WITH_TYPE_SEARCH(hw, inst); }, 1, "SubmitVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_SEARCHING}); 
+      } else {
+        inst_lib->AddInst("SubmitVec-Num", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitVec_VectorsSummed__NUM_ARGS(hw, inst); }, 1, "SubmitVec", {inst_prop_t::NUM_ARGS, inst_prop_t::MEM_TYPE_NO_SEARCHING});
+      }      
       break;
     }
   }
