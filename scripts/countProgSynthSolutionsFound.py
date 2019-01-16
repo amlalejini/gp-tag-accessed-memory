@@ -32,7 +32,7 @@ for sol in solutions:
     info_by_treatment[treatment]["total_runs"] += 1
     info_by_treatment[treatment]["problem"] = sol[header_lu["problem"]]
 
-solutions_summary = "treatment,test_mode,problem,solutions_found,total_runs,min_solution_size\n"
+solutions_summary = "treatment,problem,solutions_found,total_runs,min_solution_size\n"
 for treatment in info_by_treatment:
     info = info_by_treatment[treatment]
     print(treatment)
