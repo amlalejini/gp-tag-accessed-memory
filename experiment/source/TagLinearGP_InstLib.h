@@ -23,7 +23,7 @@ namespace TagLGP {
     using inst_t = typename hardware_t::inst_t;
     using fun_t = std::function<void(hardware_t &, const inst_t &)>; // Provide arguments, too?
     
-    enum InstProperty { BEGIN_FLOW, END_FLOW, MODULE, TAG_ARGS, NUM_ARGS, MEM_TYPE_SEARCHING};
+    enum InstProperty { BEGIN_FLOW, END_FLOW, MODULE, TAG_ARGS, NUM_ARGS, NO_ARGS, MEM_TYPE_SEARCHING, MEM_TYPE_NO_SEARCHING, MEM_TYPE_AGNOSTIC};
 
     using inst_properties_t = std::unordered_set<InstProperty>;
 
