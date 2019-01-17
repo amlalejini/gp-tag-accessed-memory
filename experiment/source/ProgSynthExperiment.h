@@ -433,6 +433,7 @@ private:
   void InitProgPop_Random();
 
   void SnapshotPrograms();
+  void OutputInstLibInstructionTypes();
 
   void AddDefaultInstructions();
   void AddDefaultInstructions_TagArgs();
@@ -880,6 +881,7 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
   // If we're not compiling to javascript, setup data collection for programs
   std::cout << "==== EXPERIMENT SETUP => data collection ====" << std::endl;
   SetupDataCollection();
+  OutputInstLibInstructionTypes();
   #endif
 
   // Verify instruction set is no nonsense!
@@ -1334,6 +1336,7 @@ void ProgramSynthesisExperiment::SnapshotPrograms() {
   file.AddFun(program_stats.get_num_arg_inst_cnt, "program_num_arg_inst_cnt");
   file.AddFun(program_stats.get_no_arg_inst_cnt, "program_no_arg_inst_cnt");
   file.AddFun(program_stats.get_program_len, "program_len");
+  file.AddFun(program_stats.get_program, "program");
 
   file.PrintHeaderKeys();
 
@@ -1345,6 +1348,50 @@ void ProgramSynthesisExperiment::SnapshotPrograms() {
     // Update snapshot file
     file.Update();
   }
+}
+
+void ProgramSynthesisExperiment::OutputInstLibInstructionTypes() {
+  std::string out_dir = DATA_DIRECTORY;
+  mkdir(out_dir.c_str(), ACCESSPERMS);
+
+  emp::DataFile file(out_dir + "/inst_lib_arg_distribution.csv");
+
+  // Count stuff
+  size_t total_num_arg_instructions = 0;
+  size_t total_tag_arg_instructions = 0;
+  size_t total_no_arg_instructions = 0;
+  size_t total_mem_searching_instructions = 0;
+  size_t total_mem_no_searching_instructions = 0;
+  size_t total_mem_agnostic_instruction = 0;
+
+  for (size_t i = 0; i < inst_lib->GetSize(); ++i) {
+
+    if (inst_lib->HasProperty(i, inst_prop_t::NUM_ARGS)) total_num_arg_instructions++;;
+    if (inst_lib->HasProperty(i, inst_prop_t::TAG_ARGS)) total_tag_arg_instructions++;
+    if (inst_lib->HasProperty(i, inst_prop_t::NO_ARGS)) total_no_arg_instructions++;
+    if (inst_lib->HasProperty(i, inst_prop_t::MEM_TYPE_SEARCHING)) total_mem_searching_instructions++;
+    if (inst_lib->HasProperty(i, inst_prop_t::MEM_TYPE_NO_SEARCHING)) total_mem_no_searching_instructions++;
+    if (inst_lib->HasProperty(i, inst_prop_t::MEM_TYPE_AGNOSTIC)) total_mem_agnostic_instruction++;
+    
+  }
+
+  // total_instructions
+  file.template AddFun<size_t>([this]() { return inst_lib->GetSize(); }, "total_instructions");
+  // total_num_arg_instructions
+  file.template AddFun<size_t>([this, total_num_arg_instructions]() { return total_num_arg_instructions; }, "total_num_arg_instructions");
+  // total_tag_arg_instructions
+  file.template AddFun<size_t>([this, total_tag_arg_instructions]() { return total_tag_arg_instructions; }, "total_tag_arg_instructions");
+  // total_no_arg_instructions
+  file.template AddFun<size_t>([this, total_no_arg_instructions]() { return total_no_arg_instructions; }, "total_no_arg_instructions");
+  // total_mem_searching_instructions
+  file.template AddFun<size_t>([this, total_mem_searching_instructions]() { return total_mem_searching_instructions; }, "total_mem_searching_instructions");
+  // total_mem_no_searching_instructions
+  file.template AddFun<size_t>([this, total_mem_no_searching_instructions]() { return total_mem_no_searching_instructions; }, "total_mem_no_searching_instructions");
+  // total_mem_agnostic_instruction
+  file.template AddFun<size_t>([this, total_mem_agnostic_instruction]() { return total_mem_agnostic_instruction; }, "total_mem_agnostic_instruction");
+  
+  file.PrintHeaderKeys();
+  file.Update();
 }
 
 void ProgramSynthesisExperiment::AddDefaultInstructions() {
