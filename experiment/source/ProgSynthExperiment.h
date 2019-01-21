@@ -2949,11 +2949,11 @@ void ProgramSynthesisExperiment::SetupProblem_Grade() {
   // Add problem-specific instructions. (Terminals)
   AddNumericTerminals(0, 16);
 
-  inst_lib->AddInst("SubmitA", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitA_Grade(hw, inst); }, 0, {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
-  inst_lib->AddInst("SubmitB", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitB_Grade(hw, inst); }, 0, {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
-  inst_lib->AddInst("SubmitC", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitC_Grade(hw, inst); }, 0, {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
-  inst_lib->AddInst("SubmitD", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitD_Grade(hw, inst); }, 0, {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
-  inst_lib->AddInst("SubmitF", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitF_Grade(hw, inst); }, 0, {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+  inst_lib->AddInst("SubmitA", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitA_Grade(hw, inst); }, 0, "SubmitA", {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+  inst_lib->AddInst("SubmitB", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitB_Grade(hw, inst); }, 0, "SubmitB", {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+  inst_lib->AddInst("SubmitC", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitC_Grade(hw, inst); }, 0, "SubmitC", {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+  inst_lib->AddInst("SubmitD", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitD_Grade(hw, inst); }, 0, "SubmitD", {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
+  inst_lib->AddInst("SubmitF", [this](hardware_t & hw, const inst_t & inst) { this->Inst_SubmitF_Grade(hw, inst); }, 0, "SubmitF", {inst_prop_t::NO_ARGS, inst_prop_t::MEM_TYPE_AGNOSTIC});
 
   switch (PROGRAM_ARGUMENT_MODE) {
     case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
