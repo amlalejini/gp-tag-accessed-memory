@@ -7,9 +7,18 @@ For each run, grab smallest correct solution network. If run has none, report no
 
 import argparse, os, copy, errno, csv
 
-default_update = 10000
+problem_whitelist = ["grade", "number-io", "for-loop-index", "median", "smallest", "small-or-large", "compare-string-lengths", "sum-of-squares"]
 
-problem_whitelist = ["number-io", "for-loop-index", "median", "smallest", "small-or-large", "compare-string-lengths", "sum-of-squares"]
+arg_types = {
+    "ARGS_BOTH": "Both",
+    "ARGS_NUM_ONLY": "Numeric",
+    "ARGS_TAG_ONLY": "Tag-based"
+}
+
+mut_rates = {
+    "MUT_005": "0.005",
+    "MUT_001": "0.001"
+}
 
 def mkdir_p(path):
     """
@@ -45,7 +54,7 @@ def main():
         update = args.update   
         print("Looking for best solutions from update {} or earlier.".format(update)) 
         
-        solutions_content = "treatment,run_id,problem,solution_found,solution_length,update_found,update_first_solution_found,program\n"
+        solutions_content = "treatment,run_id,problem,arg_type,arg_mut_rate,mem_searching,solution_found,solution_length,update_found,update_first_solution_found,program\n"
         
         for run in runs:
             print("Run: {}".format(run))
@@ -56,6 +65,22 @@ def main():
             run_sols = os.path.join(run_dir, "output", "solutions.csv")
 
             problem = run.strip("PROBLEM_").split("__")[0]
+
+            arg_type = None
+            for thing in arg_types:
+                if thing in treatment: arg_type = arg_types[thing]
+            if arg_type == None: 
+                print("Unrecognized arg type! Exiting.")
+                exit()
+
+            arg_mut_rate = None
+            for thing in mut_rates:
+                if thing in treatment: arg_mut_rate = mut_rates[thing]
+            if arg_mut_rate == None:
+                print("Unrecognized arg mut rate! Exiting.")
+                exit()
+
+            mem_searching = "0" if "MEM_SEARCH_0" in treatment else "1"
             
             file_content = None
             with open(run_sols, "r") as fp:
@@ -95,7 +120,7 @@ def main():
                 update_found = "NONE"
                 program = "NONE"
             # "treatment,run_id,problem,uses_cohorts,solution_found,solution_length,update_found,program\n"
-            solutions_content += ",".join(map(str,[treatment, run_id, problem, sol_found, program_len, update_found, update_first_sol, '"{}"'.format(program)])) + "\n"
+            solutions_content += ",".join(map(str,[treatment, run_id, problem, arg_type, arg_mut_rate, mem_searching, sol_found, program_len, update_found, update_first_sol, '"{}"'.format(program)])) + "\n"
         with open(os.path.join(dump, "min_programs__update_{}.csv".format(update)), "w") as fp:
             fp.write(solutions_content)
 
