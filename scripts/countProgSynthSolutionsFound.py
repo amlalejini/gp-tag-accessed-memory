@@ -31,12 +31,15 @@ for sol in solutions:
 
     info_by_treatment[treatment]["total_runs"] += 1
     info_by_treatment[treatment]["problem"] = sol[header_lu["problem"]]
+    info_by_treatment[treatment]["arg_type"] = sol[header_lu["arg_type"]]
+    info_by_treatment[treatment]["arg_mut_rate"] = sol[header_lu["arg_mut_rate"]]
+    info_by_treatment[treatment]["mem_searching"] = sol[header_lu["mem_searching"]]
 
-solutions_summary = "treatment,problem,solutions_found,total_runs,min_solution_size\n"
+solutions_summary = "treatment,problem,arg_type,arg_mut_rate,mem_searching,solutions_found,total_runs,min_solution_size\n"
 for treatment in info_by_treatment:
     info = info_by_treatment[treatment]
     print(treatment)
-    solutions_summary += ",".join(map(str, [treatment, info["problem"], info["solutions_found"], info["total_runs"], info["min_solution_length"]])) + "\n"
+    solutions_summary += ",".join(map(str, [treatment, info["problem"],info["arg_type"], info["arg_mut_rate"], info["mem_searching"], info["solutions_found"], info["total_runs"], info["min_solution_length"]])) + "\n"
 
 new_name = fpath.split("/")[-1].strip(".csv") + "__solutions_summary.csv"
 with open(new_name, "w") as fp:
