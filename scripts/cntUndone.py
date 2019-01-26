@@ -11,6 +11,7 @@ import argparse, os, copy, errno, csv
 def main():
     parser = argparse.ArgumentParser(description="Data aggregation script.")
     parser.add_argument("data_directory", type=str, help="Target experiment directory.")
+    parser.add_argument("-r", "--replicates", type=int, help="Expected number of replicates.")
 
     args = parser.parse_args()
 
@@ -19,6 +20,8 @@ def main():
     # Get a list of all runs
     runs = [d for d in os.listdir(data_directory) if "__" in d]
     runs.sort()
+
+    run_ids_by_treatment = {}
 
     undone_content = "treatment,run_id,target_gen,final_update\n"
     cnt = 0
@@ -49,17 +52,40 @@ def main():
             finished = False
             print("  ==> Not Finished!")
             cnt+=1
-        final_update = final_line.split(",")[0].split(" ")[-1]
+        final_update = final_line.split(";")[0].split(" ")[-1]
         
         if not finished:
             undone_content += ",".join([run_name, run_id, target_gen, final_update]) + "\n"
+
+        if not (run_name in run_ids_by_treatment): run_ids_by_treatment[run_name] = []
+        run_ids_by_treatment[run_name].append(int(run_id))
             
         total += 1
 
     with open("undone.csv", "w") as fp:
         fp.write(undone_content)
     print ("Runs not done: " + str(cnt))
-        
+
+    # Try to figure out if there are any jobs that failed to get submitted.
+    if args.replicates != None:
+
+        treatments_with_missing_runs = []
+        for treatment in run_ids_by_treatment:
+            print("Runs from treatment {}: {}".format(treatment, len(run_ids_by_treatment[treatment])))
+            if len(run_ids_by_treatment[treatment]) < args.replicates:
+                treatments_with_missing_runs.append(treatment)
+    
+        for treatment in treatments_with_missing_runs:
+            run_ids = run_ids_by_treatment[treatment]
+            run_ids.sort()
+            min_run = min(run_ids)
+            max_run = max(run_ids)
+            expected_sequence = [i for i in range(min_run, max_run+1)]
+            missing_runs = [rid for rid in expected_sequence if not (rid in run_ids)]
+            print("== Treatment: {} ==".format(treatment))
+            print("  MIN RID: {}".format(min_run))
+            print("  MAX RID: {}".format(max_run))
+            print("  Best guess at missing runs: {}".format(str(missing_runs)))
 
 if __name__ == "__main__":
     main()
