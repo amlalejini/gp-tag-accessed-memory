@@ -9,7 +9,7 @@
 
 ########## Command Lines to Run ##########
 
-DATA_DIR=/mnt/scratch/lalejini/data/tag-based-mem/data
+DATA_DIR=/mnt/scratch/lalejini/data/tag-based-mem/data-e2
 CONFIG_DIR=/mnt/scratch/lalejini/data/tag-based-mem/config
 EXAMPLES_DIR=/mnt/home/lalejini/devo_ws/gp-tag-based-memory/data/prog-synth-examples
 
@@ -38,7 +38,7 @@ PROGRAM_ARGUMENT_MODE__TAG_AND_NUM=2
 ##################################
 # Setup general configuration
 BENCHMARK_DATA_DIR=${EXAMPLES_DIR}
-SNAPSHOT_INTERVAL=100
+SNAPSHOT_INTERVAL=${GENERATIONS}
 SUMMARY_STATS_INTERVAL=20
 
 PROG_POP_SIZE=512
