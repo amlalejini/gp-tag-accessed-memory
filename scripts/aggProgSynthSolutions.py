@@ -12,12 +12,17 @@ problem_whitelist = ["grade", "number-io", "for-loop-index", "median", "smallest
 arg_types = {
     "ARGS_BOTH": "Both",
     "ARGS_NUM_ONLY": "Numeric",
-    "ARGS_TAG_ONLY": "Tag-based"
+    "ARGS_TAG_ONLY": "Tag-based",
+    "ARGS_TAG_BF": "Tag-BitFlips"
 }
 
 mut_rates = {
     "MUT_005": "0.005",
-    "MUT_001": "0.001"
+    "MUT_1": "0.1",
+    "MUT_01": "0.01",
+    "MUT_001": "0.001",
+    "MUT_0001": "0.0001",
+    "MUT_00001": "0.00001"
 }
 
 def mkdir_p(path):
@@ -41,7 +46,7 @@ def main():
 
     data_directory = args.data_directory
     dump = args.dump_directory
-    
+
     print("Pulling smallest network solutions from all runs in {}".format(data_directory))
 
     mkdir_p(dump)
@@ -51,11 +56,11 @@ def main():
     runs.sort()
 
     if args.update != None:
-        update = args.update   
-        print("Looking for best solutions from update {} or earlier.".format(update)) 
-        
+        update = args.update
+        print("Looking for best solutions from update {} or earlier.".format(update))
+
         solutions_content = "treatment,run_id,problem,arg_type,arg_mut_rate,mem_searching,solution_found,solution_length,update_found,update_first_solution_found,program\n"
-        
+
         for run in runs:
             print("Run: {}".format(run))
             run_dir = os.path.join(data_directory, run)
@@ -69,7 +74,7 @@ def main():
             arg_type = None
             for thing in arg_types:
                 if thing in treatment: arg_type = arg_types[thing]
-            if arg_type == None: 
+            if arg_type == None:
                 print("Unrecognized arg type! Exiting.")
                 exit()
 
@@ -81,7 +86,7 @@ def main():
                 exit()
 
             mem_searching = "0" if "MEM_SEARCH_0" in treatment else "1"
-            
+
             file_content = None
             with open(run_sols, "r") as fp:
                 file_content = fp.read().strip().split("\n")
@@ -89,7 +94,7 @@ def main():
             header = file_content[0].split(",")
             header_lu = {header[i].strip():i for i in range(0, len(header))}
             file_content = file_content[1:]
-            
+
             solutions = [l for l in csv.reader(file_content, quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)]
             # Add smallest solution to smallest solution doc
             min_program = None
@@ -105,7 +110,7 @@ def main():
                     elif float(solutions[i][header_lu["program_len"]]) < float(solutions[min_program][header_lu["program_len"]]):
                         min_program = i
                         sol_found = True
-            
+
             if sol_found:
                 # Record timing info about first solution
                 update_first_sol = solutions[0][header_lu["update"]]
