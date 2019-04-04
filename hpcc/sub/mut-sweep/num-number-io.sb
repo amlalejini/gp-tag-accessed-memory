@@ -11,7 +11,7 @@
 
 DATA_DIR=/mnt/scratch/lalejini/data/tag-based-mem/mut-sweep
 CONFIG_DIR=/mnt/scratch/lalejini/data/tag-based-mem/config
-EXAMPLES_DIR=/mnt/home/lalejini/devo_ws/gp-tag-based-memory/data/prog-synth-examples
+EXAMPLES_DIR=/mnt/home/lalejini/devo_ws/gp-tag-accessed-memory/data/prog-synth-examples
 
 ##################################
 # Setup random seed info
