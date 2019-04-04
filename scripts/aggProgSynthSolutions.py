@@ -12,6 +12,7 @@ problem_whitelist = ["grade", "number-io", "for-loop-index", "median", "smallest
 arg_types = {
     "ARGS_BOTH": "Both",
     "ARGS_NUM_ONLY": "Numeric",
+    "ARGS_NUM": "Numeric",
     "ARGS_TAG_ONLY": "Tag-based",
     "ARGS_TAG_BF": "Tag-BitFlips"
 }
