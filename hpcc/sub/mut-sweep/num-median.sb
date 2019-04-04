@@ -9,7 +9,7 @@
 
 ########## Command Lines to Run ##########
 
-DATA_DIR=/mnt/scratch/lalejini/data/tag-based-mem/mut-sweep
+DATA_DIR=/mnt/scratch/lalejini/data/tag-based-mem/mut-sweep-2
 CONFIG_DIR=/mnt/scratch/lalejini/data/tag-based-mem/config
 EXAMPLES_DIR=/mnt/home/lalejini/devo_ws/gp-tag-accessed-memory/data/prog-synth-examples
 
@@ -51,9 +51,9 @@ PROGRAM_ARGUMENTS_TYPE_SEARCH=0
 PROG_POP_SIZE=1000
 USE_MODULES=0
 
-PROG_MUT__PER_INST_SUB=0.001
-PROG_MUT__PER_INST_INS=0.001
-PROG_MUT__PER_INST_DEL=0.001
+PROG_MUT__PER_INST_SUB=0.005
+PROG_MUT__PER_INST_INS=0.005
+PROG_MUT__PER_INST_DEL=0.005
 PROG_MUT__PER_PROG_SLIP=0.00
 PROG_MUT__PER_MOD_DUP=0.00
 PROG_MUT__PER_MOD_DEL=0.00
