@@ -2,20 +2,20 @@
 ########## Define Resources Needed with SBATCH Lines ##########
 
 #SBATCH --time=4:00:00            # limit of wall clock time - how long the job will run (same as -t)
-#SBATCH --array=301-600
+#SBATCH --array=1-600
 #SBATCH --mem=4G                    # memory required per node - amount of memory (in bytes)
 #SBATCH --job-name tbf-med         # you can give your job a name for easier identification (same as -J)
 #SBATCH --account=devolab
 
 ########## Command Lines to Run ##########
 
-DATA_DIR=/mnt/scratch/lalejini/data/tag-based-mem/mut-sweep-slip
+DATA_DIR=/mnt/scratch/lalejini/data/tag-based-mem/mut-sweep-pop500
 CONFIG_DIR=/mnt/scratch/lalejini/data/tag-based-mem/config
 EXAMPLES_DIR=/mnt/home/lalejini/devo_ws/gp-tag-accessed-memory/data/prog-synth-examples
 
 ##################################
 # Setup random seed info
-PROBLEM_SEED_OFFSET=1000
+PROBLEM_SEED_OFFSET=6000
 SEED=$((SLURM_ARRAY_TASK_ID + PROBLEM_SEED_OFFSET))
 
 ##################################
@@ -56,7 +56,7 @@ ARG_MODE_NAME=TAG_BF
 PROGRAM_ARGUMENT_MODE=${PROGRAM_ARGUMENT_MODE__TAG_ONLY}
 PROGRAM_ARGUMENTS_TYPE_SEARCH=0
 
-PROG_POP_SIZE=1000
+PROG_POP_SIZE=500
 USE_MODULES=0
 
 PROG_MUT__PER_INST_SUB=0.005
