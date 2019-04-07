@@ -20,6 +20,8 @@
 - [Smallest](#smallest)
   - [Smallest - Tag-based arguments](#smallest---tag-based-arguments)
   - [Smallest - Numeric arguments](#smallest---numeric-arguments)
+- [String Lengths Backwards](#string-lengths-backwards)
+  - [String Lengths Backwards - Tag-based Arguments](#string-lengths-backwards---tag-based-arguments)
 
 <!-- /TOC -->
 
@@ -181,7 +183,7 @@
     sol.PushInst("Return",               {matrix[8], matrix[8], matrix[8]});
   sol.PushInst("Close",                  {matrix[8], matrix[8], matrix[8]});
   sol.PushInst("SubmitF",                {matrix[8], matrix[8], matrix[8]});
-  
+
   prog_world->Inject(sol, PROG_POP_SIZE);
 ```
 
@@ -216,7 +218,7 @@
     sol.PushInst("Return",               {8, 8, 8});
   sol.PushInst("Close",                  {8, 8, 8});
   sol.PushInst("SubmitF",                {8, 8, 8});
-  
+
   prog_world->Inject(sol, PROG_POP_SIZE);
 ```
 
@@ -241,3 +243,20 @@
 
 ### Smallest - Numeric arguments
 
+## String Lengths Backwards
+
+### String Lengths Backwards - Tag-based Arguments
+
+```{C++}
+  emp::vector<emp::BitSet<TAG_WIDTH>> matrix = GenHadamardMatrix<TAG_WIDTH>();
+  hardware_t::Program sol(inst_lib);
+
+  sol.PushInst("LoadStrVec-Tag",  {matrix[0], matrix[4], matrix[4]});
+  sol.PushInst("VecReverse-Tag",  {matrix[0], matrix[4], matrix[4]});
+  sol.PushInst("Foreach-Tag",     {matrix[1], matrix[0], matrix[4]});
+  sol.PushInst(  "StrLength-Tag", {matrix[1], matrix[2], matrix[4]});
+  sol.PushInst(  "SubmitVal-Tag", {matrix[2], matrix[4], matrix[4]});
+  sol.PushInst("Close",       {matrix[4], matrix[4], matrix[4]});
+  sol.Print();
+  prog_world->Inject(sol, PROG_POP_SIZE);
+```
