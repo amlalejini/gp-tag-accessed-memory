@@ -2325,6 +2325,8 @@ void ProgramSynthesisExperiment::SetupProblem_StringLengthsBackwards() {
 
   // Tell experiment how to configure hardware inputs when running a program against a test.
   begin_program_test.AddAction([this](prog_org_t & prog_org) {
+    // std::cout << "============ BEGIN PROGRAM TEST ============" << std::endl;
+    // std::cout << "TRAINING? " << eval_util.use_training_set << "(" << eval_util.current_testID << ")" << std::endl;
     // Reset evaluation utilities.
     prob_utils_StringLengthsBackwards.ResetTestEval();
     emp_assert(eval_hardware->GetMemSize() >= 3);
@@ -2341,6 +2343,12 @@ void ProgramSynthesisExperiment::SetupProblem_StringLengthsBackwards() {
       hardware_t::CallState & state = eval_hardware->GetCurCallState();
       hardware_t::Memory & wmem = state.GetWorkingMem();
 
+      // std::cout << "program test input ("<<input.size()<<") = [";
+      // for (size_t i = 0; i < input.size(); ++i) {
+      //   if (i) std::cout << ",";
+      //   std::cout << input[i];
+      // } std::cout << "]" << std::endl;
+
       // Set hardware inputs.
       wmem.Set(0, input);
     }
@@ -2355,13 +2363,9 @@ void ProgramSynthesisExperiment::SetupProblem_StringLengthsBackwards() {
 
     prob_output_t & correct_output = test_set_ptr->GetOutput(eval_util.current_testID);
 
-    TestResult result;
-    if (!prob_utils_StringLengthsBackwards.submitted) {
-      result.score = 0; result.pass = false; result.sub = false;
-    } else {
-      std::pair<double, bool> r(prob_utils_StringLengthsBackwards.CalcScorePassFail(correct_output, prob_utils_StringLengthsBackwards.submitted_val));
-      result.score = r.first; result.pass = r.second; result.sub = true;
-    }
+    TestResult result; // This problem wants a program to output/submit NOTHING if given empty vector!
+    std::pair<double, bool> r(prob_utils_StringLengthsBackwards.CalcScoreGradient(correct_output, prob_utils_StringLengthsBackwards.submitted_val));
+    result.score = r.first; result.pass = r.second; result.sub = true;
     return result;
   };
 

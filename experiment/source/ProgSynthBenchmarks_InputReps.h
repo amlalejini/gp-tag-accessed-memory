@@ -139,7 +139,7 @@ using Problem_Syllables_output_t = std::string;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Problem: NumberIO
 // - Input type: [double, integer]
-// - Output type: double 
+// - Output type: double
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ Problem_NumberIO_input_t GenRandomTestInput_NumberIO(emp::Random & rand, const s
   emp_assert(int_range.first < int_range.second);
   return Problem_NumberIO_input_t{rand.GetInt(int_range.first, int_range.second), rand.GetDouble(double_range.first, double_range.second)};
 }
-  
+
 Problem_NumberIO_output_t GenCorrectOut_NumberIO(const Problem_NumberIO_input_t & input) {
   return input.first + input.second;
 }
@@ -157,9 +157,9 @@ Problem_NumberIO_output_t GenCorrectOut_NumberIO(const Problem_NumberIO_input_t 
 struct ProblemUtilities_NumberIO {
   using input_t = Problem_NumberIO_input_t;
   using output_t = Problem_NumberIO_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t,output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -168,7 +168,7 @@ struct ProblemUtilities_NumberIO {
   double submitted_val; // if going to do string thing, we can have a submission_str.
   double MAX_ERROR;
 
-  ProblemUtilities_NumberIO() 
+  ProblemUtilities_NumberIO()
     : testing_set(ProblemUtilities_NumberIO::LoadTestCaseFromLine),
       training_set(ProblemUtilities_NumberIO::LoadTestCaseFromLine),
       submitted(false), submitted_val(0.0), MAX_ERROR(1)
@@ -178,8 +178,8 @@ struct ProblemUtilities_NumberIO {
 
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
-  
-  input_t & GetTestInput(bool training, size_t id) { 
+
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -218,13 +218,13 @@ struct ProblemUtilities_NumberIO {
     emp_assert(MAX_ERROR != 0);
     // If output is correct, return a score of 1.0 and mark that submission passes.
     if (correct_test_output == sub) {
-      return {1.0, true}; 
+      return {1.0, true};
     } else { // Otherwise, return {score=[0:1], false}
       double error = emp::Abs(correct_test_output - sub);
       emp_assert(error != 0, "Error shouldn't equal zero here");
       double score = (error <= MAX_ERROR) ? 1 - (error/MAX_ERROR) : 0;
       return {score, false};
-    }  
+    }
   }
 
   void PrintTestCSV(std::ostream & os, const input_t & in) const {
@@ -257,13 +257,13 @@ Problem_SmallOrLarge_output_t GenCorrectOut_SmallOrLarge(const Problem_SmallOrLa
   else return SmallOrLarge__NONE_STR;
 }
 
-struct ProblemUtilities_SmallOrLarge { 
+struct ProblemUtilities_SmallOrLarge {
   using this_t = ProblemUtilities_SmallOrLarge;
   using input_t = Problem_SmallOrLarge_input_t;
   using output_t = Problem_SmallOrLarge_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -281,7 +281,7 @@ struct ProblemUtilities_SmallOrLarge {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -375,13 +375,13 @@ Problem_ForLoopIndex_output_t GenCorrectOut_ForLoopIndex(const Problem_ForLoopIn
   return out;
 }
 
-struct ProblemUtilities_ForLoopIndex { 
+struct ProblemUtilities_ForLoopIndex {
   using this_t = ProblemUtilities_ForLoopIndex;
   using input_t = Problem_ForLoopIndex_input_t;
   using output_t = Problem_ForLoopIndex_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -400,7 +400,7 @@ struct ProblemUtilities_ForLoopIndex {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -429,7 +429,7 @@ struct ProblemUtilities_ForLoopIndex {
     input[1] = std::atof(split_line[1].c_str());
     // Step = line[2]
     input[2] = std::atof(split_line[2].c_str());
-    output = GenCorrectOut_ForLoopIndex(input);  
+    output = GenCorrectOut_ForLoopIndex(input);
     return {input, output};
   }
 
@@ -499,13 +499,13 @@ Problem_CompareStringLengths_output_t GenCorrectOut_CompareStringLengths(const P
   return false;
 }
 
-struct ProblemUtilities_CompareStringLengths { 
+struct ProblemUtilities_CompareStringLengths {
   using this_t = ProblemUtilities_CompareStringLengths;
   using input_t = Problem_CompareStringLengths_input_t;
   using output_t = Problem_CompareStringLengths_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -524,7 +524,7 @@ struct ProblemUtilities_CompareStringLengths {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -544,8 +544,8 @@ struct ProblemUtilities_CompareStringLengths {
   }
 
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
+    input_t input;
+    output_t output;
     // Load input.
     input[0] = line[0];
     input[1] = line[1];
@@ -611,13 +611,13 @@ Problem_LastIndexOfZero_output_t GenCorrectOut_LastIndexOfZero(const Problem_Las
   return 0; // Should never get here!
 }
 
-struct ProblemUtilities_LastIndexOfZero { 
+struct ProblemUtilities_LastIndexOfZero {
   using this_t = ProblemUtilities_LastIndexOfZero;
   using input_t = Problem_LastIndexOfZero_input_t;
   using output_t = Problem_LastIndexOfZero_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -626,7 +626,7 @@ struct ProblemUtilities_LastIndexOfZero {
   int submitted_val;
 
   int MAX_ERROR;
-  
+
   ProblemUtilities_LastIndexOfZero()
     : testing_set(this_t::LoadTestCaseFromLine),
       training_set(this_t::LoadTestCaseFromLine),
@@ -638,7 +638,7 @@ struct ProblemUtilities_LastIndexOfZero {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -660,18 +660,18 @@ struct ProblemUtilities_LastIndexOfZero {
 
 
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
-    
+    input_t input;
+    output_t output;
+
     std::string input_str = line[0];
     if (input_str.front() == '[') { input_str.erase(0, 1); }
     if (input_str.back() == ']') { input_str.pop_back(); }
     emp::vector<std::string> sliced_input_str = emp::slice(input_str, ' ');
-    
+
     for (size_t i = 0; i < sliced_input_str.size(); ++i) {
       input.emplace_back(std::atoi(sliced_input_str[i].c_str()));
     }
-    
+
     // Calculate correct output given loaded input
     int calc_out = GenCorrectOut_LastIndexOfZero(input);
     // Get output from file
@@ -708,7 +708,7 @@ struct ProblemUtilities_LastIndexOfZero {
       if (i) os << ",";
       os << in[i];
     }
-    os << "]"; 
+    os << "]";
     os << "\"";
   }
 
@@ -739,15 +739,15 @@ Problem_MirrorImage_input_t GenRandomTestInput_MirrorImage(emp::Random & rand,
         input[0].emplace_back(rand.GetInt(vec_val_range.first, vec_val_range.second+1));
       }
       input[1] = input[0];
-      break; 
+      break;
     }
     case 1: { // Random
       for (size_t i = 0; i < input.size(); ++i) {
         for (size_t k = 0; k < vec_size; ++k) {
           input[i].emplace_back(rand.GetInt(vec_val_range.first, vec_val_range.second+1));
         }
-      } 
-      break; 
+      }
+      break;
     }
     case 2: { // Mirrored
       for (size_t k = 0; k < vec_size; ++k) {
@@ -755,7 +755,7 @@ Problem_MirrorImage_input_t GenRandomTestInput_MirrorImage(emp::Random & rand,
       }
       input[1] = input[0];
       std::reverse(std::begin(input[1]), std::end(input[1]));
-      break; 
+      break;
     }
     case 3: { // Nearly mirrored
       for (size_t k = 0; k < vec_size; ++k) {
@@ -767,7 +767,7 @@ Problem_MirrorImage_input_t GenRandomTestInput_MirrorImage(emp::Random & rand,
       for (size_t i = 0; i < num_randos; ++i) {
         input[0][rand.GetUInt(input[0].size())] = rand.GetInt(vec_val_range.first, vec_val_range.second+1);
       }
-      break; 
+      break;
     }
   }
   return input;
@@ -789,16 +789,16 @@ struct ProblemUtilities_MirrorImage {
   using this_t = ProblemUtilities_MirrorImage;
   using input_t = Problem_MirrorImage_input_t;
   using output_t = Problem_MirrorImage_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
   // --- Useful during a test evaluation ---
   bool submitted;
   bool submitted_val;
-  
+
   ProblemUtilities_MirrorImage()
     : testing_set(this_t::LoadTestCaseFromLine),
       training_set(this_t::LoadTestCaseFromLine),
@@ -810,7 +810,7 @@ struct ProblemUtilities_MirrorImage {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -831,9 +831,9 @@ struct ProblemUtilities_MirrorImage {
   }
 
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
-    
+    input_t input;
+    output_t output;
+
     // Vector 1
     std::string input_str = line[0];
     if (input_str.front() == '[') { input_str.erase(0, 1); }
@@ -846,11 +846,11 @@ struct ProblemUtilities_MirrorImage {
     // Vector 2
     input_str = line[1];
     if (input_str.front() == '[') { input_str.erase(0, 1); }
-    if (input_str.back() == ']') { input_str.pop_back(); }  
+    if (input_str.back() == ']') { input_str.pop_back(); }
     sliced_input_str = emp::slice(input_str, ' ');
     for (size_t i = 0; i < sliced_input_str.size(); ++i) {
       input[1].emplace_back(std::atoi(sliced_input_str[i].c_str()));
-    }   
+    }
 
     // Calculate correct output given loaded input
     bool calc_out = GenCorrectOut_MirrorImage(input);
@@ -883,12 +883,12 @@ struct ProblemUtilities_MirrorImage {
       if (i) os << ",";
       os << in[0][i];
     }
-    os << "],["; 
+    os << "],[";
     for (size_t i = 0; i < in[1].size(); ++i) {
       if (i) os << ",";
       os << in[1][i];
     }
-    os << "]]"; 
+    os << "]]";
     os << "\"";
   }
 
@@ -918,13 +918,13 @@ Problem_SumOfSquares_output_t GenCorrectOut_SumOfSquares(const Problem_SumOfSqua
   }
 }
 
-struct ProblemUtilities_SumOfSquares { 
+struct ProblemUtilities_SumOfSquares {
   using this_t = ProblemUtilities_SumOfSquares;
   using input_t = Problem_SumOfSquares_input_t;
   using output_t = Problem_SumOfSquares_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -944,7 +944,7 @@ struct ProblemUtilities_SumOfSquares {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -965,8 +965,8 @@ struct ProblemUtilities_SumOfSquares {
   }
 
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
+    input_t input;
+    output_t output;
     // Load input.
     input = std::atof(line[0].c_str());
     // Load output.
@@ -1036,13 +1036,13 @@ Problem_VectorsSummed_output_t GenCorrectOut_VectorsSummed(const Problem_Vectors
   return output;
 }
 
-struct ProblemUtilities_VectorsSummed { 
+struct ProblemUtilities_VectorsSummed {
   using this_t = ProblemUtilities_VectorsSummed;
   using input_t = Problem_VectorsSummed_input_t;
   using output_t = Problem_VectorsSummed_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -1051,7 +1051,7 @@ struct ProblemUtilities_VectorsSummed {
   emp::vector<int> submitted_val;
   int MAX_NUM;
   int MAX_ERROR;
-  
+
   ProblemUtilities_VectorsSummed()
     : testing_set(this_t::LoadTestCaseFromLine),
       training_set(this_t::LoadTestCaseFromLine),
@@ -1063,7 +1063,7 @@ struct ProblemUtilities_VectorsSummed {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -1084,9 +1084,9 @@ struct ProblemUtilities_VectorsSummed {
   }
 
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
-    
+    input_t input;
+    output_t output;
+
     // Vector 1
     std::string input_str = line[0];
     if (input_str.front() == '[') { input_str.erase(0, 1); }
@@ -1099,16 +1099,16 @@ struct ProblemUtilities_VectorsSummed {
     // Vector 2
     input_str = line[1];
     if (input_str.front() == '[') { input_str.erase(0, 1); }
-    if (input_str.back() == ']') { input_str.pop_back(); }  
+    if (input_str.back() == ']') { input_str.pop_back(); }
     sliced_input_str = emp::slice(input_str, ' ');
     for (size_t i = 0; i < sliced_input_str.size(); ++i) {
       input[1].emplace_back(std::atoi(sliced_input_str[i].c_str()));
-    }   
+    }
 
     // Output vector
     input_str = line[2];
     if (input_str.front() == '[') { input_str.erase(0, 1); }
-    if (input_str.back() == ']') { input_str.pop_back(); }  
+    if (input_str.back() == ']') { input_str.pop_back(); }
     sliced_input_str = emp::slice(input_str, ' ');
     for (size_t i = 0; i < sliced_input_str.size(); ++i) {
       output.emplace_back(std::atoi(sliced_input_str[i].c_str()));
@@ -1116,7 +1116,7 @@ struct ProblemUtilities_VectorsSummed {
 
     // Calculate correct output given loaded input
     emp::vector<int> calc_out = GenCorrectOut_VectorsSummed(input);
-    
+
     // make sure generated output and read output match
     if (calc_out != output) {
       std::cout << "ERROR! Generated output does not match read output! Exiting." << std::endl;
@@ -1164,12 +1164,12 @@ struct ProblemUtilities_VectorsSummed {
       if (i) os << ",";
       os << in[0][i];
     }
-    os << "],["; 
+    os << "],[";
     for (size_t i = 0; i < in[1].size(); ++i) {
       if (i) os << ",";
       os << in[1][i];
     }
-    os << "]]"; 
+    os << "]]";
     os << "\"";
   }
 };
@@ -1225,13 +1225,13 @@ Problem_Grade_output_t GenCorrectOut_Grade(const Problem_Grade_input_t & input) 
   else { return Grade__F_STR; }
 }
 
-struct ProblemUtilities_Grade { 
+struct ProblemUtilities_Grade {
   using this_t = ProblemUtilities_Grade;
   using input_t = Problem_Grade_input_t;
   using output_t = Problem_Grade_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -1250,7 +1250,7 @@ struct ProblemUtilities_Grade {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -1280,7 +1280,7 @@ struct ProblemUtilities_Grade {
     input[2] = std::atof(line[2].c_str());
     input[3] = std::atof(line[3].c_str());
     input[4] = std::atof(line[4].c_str());
-    
+
     // std::cout << "=== Loading test case from file ===" << std::endl;
     // std::cout << "A thresh: " << input[0] << std::endl;
     // std::cout << "B thresh: " << input[1] << std::endl;
@@ -1360,13 +1360,13 @@ Problem_Median_output_t GenCorrectOut_Median(const Problem_Median_input_t & inpu
   return (input[0] + input[1] + input[2]) - min_val - max_val;
 }
 
-struct ProblemUtilities_Median { 
+struct ProblemUtilities_Median {
   using this_t = ProblemUtilities_Median;
   using input_t = Problem_Median_input_t;
   using output_t = Problem_Median_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -1385,7 +1385,7 @@ struct ProblemUtilities_Median {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -1406,8 +1406,8 @@ struct ProblemUtilities_Median {
   }
 
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
+    input_t input;
+    output_t output;
     // Load input.
     input[0] = std::atof(line[0].c_str());
     input[1] = std::atof(line[1].c_str());
@@ -1462,13 +1462,13 @@ Problem_Smallest_output_t GenCorrectOut_Smallest(const Problem_Smallest_input_t 
   return smallest;
 }
 
-struct ProblemUtilities_Smallest { 
+struct ProblemUtilities_Smallest {
   using this_t = ProblemUtilities_Smallest;
   using input_t = Problem_Smallest_input_t;
   using output_t = Problem_Smallest_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
@@ -1487,7 +1487,7 @@ struct ProblemUtilities_Smallest {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -1507,8 +1507,8 @@ struct ProblemUtilities_Smallest {
   }
 
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
+    input_t input;
+    output_t output;
     // Load input.
     input[0] = std::atof(line[0].c_str());
     input[1] = std::atof(line[1].c_str());
@@ -1540,7 +1540,7 @@ struct ProblemUtilities_Smallest {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Problem: StringLengthsBackwards
-// - Input: emp::vector<std::string> 
+// - Input: emp::vector<std::string>
 // - Output: emp::vector<size_t>
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1576,20 +1576,20 @@ Problem_StringLengthsBackwards_output_t GenCorrectOut_StringLengthsBackwards(con
   return output;
 }
 
-struct ProblemUtilities_StringLengthsBackwards { 
+struct ProblemUtilities_StringLengthsBackwards {
   using this_t = ProblemUtilities_StringLengthsBackwards;
   using input_t = Problem_StringLengthsBackwards_input_t;
   using output_t = Problem_StringLengthsBackwards_output_t;
-  
+
   using testcase_set_t = TestCaseSet<input_t, output_t>;
-  
+
   testcase_set_t testing_set;
   testcase_set_t training_set;
 
   // --- Useful during a test evaluation ---
   bool submitted;
   emp::vector<size_t> submitted_val;
-  
+
   ProblemUtilities_StringLengthsBackwards()
     : testing_set(this_t::LoadTestCaseFromLine),
       training_set(this_t::LoadTestCaseFromLine),
@@ -1601,7 +1601,7 @@ struct ProblemUtilities_StringLengthsBackwards {
   testcase_set_t & GetTestingSet() { return testing_set; }
   testcase_set_t & GetTrainingSet() { return training_set; }
 
-  input_t & GetTestInput(bool training, size_t id) { 
+  input_t & GetTestInput(bool training, size_t id) {
     if (training) { emp_assert(id < training_set.GetSize()); return training_set.GetInput(id); }
     else { emp_assert(id < testing_set.GetSize()); return testing_set.GetInput(id); }
   }
@@ -1624,11 +1624,11 @@ struct ProblemUtilities_StringLengthsBackwards {
     submitted = true;
     submitted_val = vec;
   }
-  
+
   static std::pair<input_t, output_t> LoadTestCaseFromLine(const emp::vector<std::string> & line) {
-    input_t input;   
-    output_t output; 
-    
+    input_t input;
+    output_t output;
+
     // Load input.
     // std::cout << "==== LOAD TEST CASE FROM LINE ====" << std::endl;
     // Parse line[0]
@@ -1636,17 +1636,17 @@ struct ProblemUtilities_StringLengthsBackwards {
     if (input_str.front() == '[') { input_str.erase(0, 1); }
     if (input_str.back() == ']') { input_str.pop_back(); }
     input_str += "\n";
-    
+
     // std::cout << "Input str =" << input_str << std::endl;
     // std::cout << "Line[0] = " << line[0] << std::endl;
     // std::cout << "(1) Replace commas" << std::endl;
     input_str = StrReplace(input_str, ",", "{COMMA}");                  // Get rid of commas to avoid confusing CSV parser
     // std::cout << "(1.25) Replace escaped backslashes" << std::endl;
     input_str = StrReplace(input_str, "\\\\", "{BSLASH}");              // Get rid of backslashes so we can get rid of escaped quotes to avoid confusing the CSV parser
-    // std::cout << "(1.5) Replace escaped uotes" << std::endl; 
+    // std::cout << "(1.5) Replace escaped uotes" << std::endl;
     input_str = StrReplace(input_str, "\\\"", "{QUOTE}");               // Get rid of quotes to avoid confusing the parser
-    // std::cout << "  Input str = " << input_str << std::endl; 
-    
+    // std::cout << "  Input str = " << input_str << std::endl;
+
     // We use a csv parser to tackle the input line (after a bit of processing things that confuse the parser...)
     std::istringstream instr(input_str);
     aria::csv::CsvParser parser(instr);
@@ -1673,7 +1673,7 @@ struct ProblemUtilities_StringLengthsBackwards {
 
     // What do we *expect* the correct output to be?
     for (int i = input.size()-1; i >= 0; --i) { correct_out.emplace_back(input[i].size()); }
-    
+
     // Handle output
     if (line.size() > 1) {
       // What do we read the correct output as?
@@ -1689,7 +1689,7 @@ struct ProblemUtilities_StringLengthsBackwards {
       // If read out and correct out are not identical, throw an error.
       if (read_out != correct_out) {
         std::cout << "ERROR! Read output different from calculated output!" << std::endl;
-        
+
         std::cout << "Read out: ";
         for (size_t i = 0; i < read_out.size(); ++i) {
           if (i) std::cout << ",";
@@ -1701,7 +1701,7 @@ struct ProblemUtilities_StringLengthsBackwards {
           if (i) std::cout << ",";
           std::cout << correct_out[i];
         } std::cout << std::endl;
-        
+
         std::cout << "Exiting." << std::endl;
         exit(-1);
       }
@@ -1710,10 +1710,16 @@ struct ProblemUtilities_StringLengthsBackwards {
 
     output = correct_out;
 
+    // std::cout << "input ("<<input.size()<<") = [";
+    // for (size_t i = 0; i < input.size(); ++i) {
+    //   if (i) std::cout << ",";
+    //   std::cout << input[i];
+    // } std::cout << "]" << std::endl;
+
     // std::cout << "output = [";
     // for (size_t i = 0; i < output.size(); ++i) {
-      // if (i) std::cout << ",";
-      // std::cout << output[i];
+    //   if (i) std::cout << ",";
+    //   std::cout << output[i];
     // } std::cout << "]" << std::endl;
 
     return {input, output};
@@ -1725,14 +1731,26 @@ struct ProblemUtilities_StringLengthsBackwards {
   }
 
   std::pair<double, bool> CalcScoreGradient(const output_t & correct_test_output, const output_t & sub) {
+    // std::cout << "===== CALCSCOREGRADIENT ======" << std::endl;
+    // std::cout << "Correct test output = [";
+    // for (size_t i = 0; i < correct_test_output.size(); ++i) {
+    //   if (i) std::cout << ",";
+    //   std::cout << correct_test_output[i];
+    // } std::cout << "]" << std::endl;
+    // std::cout << "Sub output = ";
+    // for (size_t i = 0; i < sub.size(); ++i) {
+    //   if (i) std::cout << ",";
+    //   std::cout << sub[i];
+    // } std::cout << "]" << std::endl;
     const double max_dist = emp::Max(correct_test_output.size(), sub.size());
     double dist = emp::calc_edit_distance(correct_test_output, sub);
+    // std::cout << "dist = " << dist << std::endl;
     if (dist == 0) {
       return {1.0, true};
     } else {
       return {(max_dist - dist)/max_dist, false};
     }
-  } 
+  }
 
   void PrintTestCSV(std::ostream & os, const input_t & in) const {
     os << "\"";
@@ -1741,7 +1759,7 @@ struct ProblemUtilities_StringLengthsBackwards {
       if (i) os << ",";
       os << "{BEGIN-STR}" << in[i] << "{END-STR}";
     }
-    os << "]"; 
+    os << "]";
     os << "\"";
   }
 };
