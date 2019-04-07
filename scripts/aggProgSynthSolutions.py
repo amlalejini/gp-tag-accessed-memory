@@ -7,7 +7,7 @@ For each run, grab smallest correct solution network. If run has none, report no
 
 import argparse, os, copy, errno, csv
 
-problem_whitelist = ["grade", "number-io", "for-loop-index", "median", "smallest", "small-or-large", "compare-string-lengths", "sum-of-squares"]
+problem_whitelist = ["grade", "number-io", "for-loop-index", "median", "smallest", "small-or-large", "compare-string-lengths", "sum-of-squares", "string-lengths-backwards"]
 
 arg_types = {
     "ARGS_BOTH": "Both",
