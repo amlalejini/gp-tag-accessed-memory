@@ -8,7 +8,8 @@ CFLAGS_all := -Wall -Wno-unused-function -std=c++14 -I$(EMP_DIR)/ -I$(CSV_READER
 
 # Native compiler information
 CXX_nat := g++-8
-CFLAGS_nat := -O3 -DNDEBUG $(CFLAGS_all) 
+CFLAGS_nat := -O3 -DNDEBUG $(CFLAGS_all)
+# CFLAGS_nat := -g $(CFLAGS_all) -pedantic -DEMP_TRACK_MEM  -Wnon-virtual-dtor -Wcast-align -Woverloaded-virtual
 CFLAGS_nat_debug := -g $(CFLAGS_all) -pedantic -DEMP_TRACK_MEM  -Wnon-virtual-dtor -Wcast-align -Woverloaded-virtual
 
 # Emscripten compiler information
@@ -25,9 +26,10 @@ default: $(addprefix native-, $(EXP_NAMES))
 native: $(addprefix native-, $(EXP_NAMES))
 debug: $(addprefix debug-, $(EXP_NAMES))
 
-debug-%: CFLAGS_nat := $(CFLAGS_nat_debug)
-debug-%: native-%
-	
+debug-%: source/native/%.cc
+	$(CXX_nat) $(CFLAGS_nat_debug) $< -o $*
+	@echo To build the web version use: make web
+
 native-%: source/native/%.cc
 	$(CXX_nat) $(CFLAGS_nat) $< -o $*
 	@echo To build the web version use: make web
