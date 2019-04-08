@@ -92,7 +92,15 @@ def main():
                 print("Unrecognized arg mut rate! Exiting.")
                 exit()
 
-            mem_searching = "0" if "MEM_SEARCH_0" in treatment else "1"
+            run_log_fpath = os.path.join(run_dir, "run.log")
+            with open(run_log_fpath, "r") as logfp:
+                log_content = logfp.read()
+
+            mem_searching = None
+            if "set PROGRAM_ARGUMENTS_TYPE_SEARCH 0" in log_content:
+                mem_searching = "0"
+            else:
+                mem_searching = "1"
 
             file_content = None
             with open(run_sols, "r") as fp:
