@@ -26,7 +26,7 @@ for sol in solutions:
         info_by_treatment[treatment]["solutions_found"] += 1
         if info_by_treatment[treatment]["min_solution_length"] == "NONE":
             info_by_treatment[treatment]["min_solution_length"] = sol[header_lu["solution_length"]]
-        elif info_by_treatment[treatment]["min_solution_length"] > sol[header_lu["solution_length"]]:
+        elif int(info_by_treatment[treatment]["min_solution_length"]) > int(sol[header_lu["solution_length"]]):
             info_by_treatment[treatment]["min_solution_length"] = sol[header_lu["solution_length"]]
 
     info_by_treatment[treatment]["total_runs"] += 1
@@ -43,5 +43,4 @@ for treatment in info_by_treatment:
 
 new_name = fpath.split("/")[-1].strip(".csv") + "__solutions_summary.csv"
 with open(new_name, "w") as fp:
-    fp.write(solutions_summary)   
-    
+    fp.write(solutions_summary)
