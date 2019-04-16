@@ -228,6 +228,7 @@ private:
   size_t MIN_PROG_SIZE;
   size_t MAX_PROG_SIZE;
   size_t PROG_EVAL_TIME;
+  double PROG_MUT__PER_TAG_RANDOMIZE;
   double PROG_MUT__PER_BIT_FLIP;
   double PROG_MUT__PER_NUMERIC_ARG_SUB;
   double PROG_MUT__PER_INST_SUB;
@@ -1134,6 +1135,7 @@ void ProgramSynthesisExperiment::SetupMutation() {
 
   prog_mutator.MAX_NUMERIC_ARG = MEM_SIZE-1;
 
+  prog_mutator.PER_TAG_RANDOMIZE = PROG_MUT__PER_TAG_RANDOMIZE;
   prog_mutator.PER_BIT_FLIP = PROG_MUT__PER_BIT_FLIP;
   prog_mutator.PER_NUMERIC_ARG_SUB = PROG_MUT__PER_NUMERIC_ARG_SUB;
   prog_mutator.PER_INST_SUB = PROG_MUT__PER_INST_SUB;
@@ -1268,6 +1270,7 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
   MAX_PROG_SIZE = config.MAX_PROG_SIZE();
   PROG_EVAL_TIME = config.PROG_EVAL_TIME();
   PROG_MUT__PER_BIT_FLIP = config.PROG_MUT__PER_BIT_FLIP();
+  PROG_MUT__PER_TAG_RANDOMIZE = config.PROG_MUT__PER_TAG_RANDOMIZE();
   PROG_MUT__PER_NUMERIC_ARG_SUB = config.PROG_MUT__PER_NUMERIC_ARG_SUB();
   PROG_MUT__PER_INST_SUB = config.PROG_MUT__PER_INST_SUB();
   PROG_MUT__PER_INST_INS = config.PROG_MUT__PER_INST_INS();

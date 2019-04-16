@@ -11,13 +11,13 @@
 /// Mutator for tag LGP programs
 template<size_t TAG_WIDTH>
 struct TagLGPMutator {
-  using hardware_t = TagLGP::TagLinearGP_TW<TAG_WIDTH>; 
+  using hardware_t = TagLGP::TagLinearGP_TW<TAG_WIDTH>;
   using program_t = typename hardware_t::Program;
   using tag_t = typename hardware_t::tag_t;
   using inst_t = typename hardware_t::inst_t;
   using inst_lib_t = typename hardware_t::inst_lib_t;
   using inst_prop_t = typename hardware_t::inst_prop_t;
-  
+
   size_t MAX_PROGRAM_LEN;
   size_t MIN_PROGRAM_LEN;
   size_t MAX_NUMERIC_ARG;
@@ -26,6 +26,7 @@ struct TagLGPMutator {
   bool USE_TAG_ARGUMENTS;
 
   double PER_BIT_FLIP;
+  double PER_TAG_RANDOMIZE;
   double PER_NUMERIC_ARG_SUB;
   double PER_INST_SUB;
   double PER_INST_INS;
@@ -33,7 +34,7 @@ struct TagLGPMutator {
   double PER_PROG_SLIP;
   double PER_MOD_DUP;
   double PER_MOD_DEL;
-  
+
   enum ModuleMutType { DUP=0, DEL, NONE };
 
   struct ModuleInfo {
@@ -47,23 +48,23 @@ struct TagLGPMutator {
 
   size_t Mutate(emp::Random & rnd, program_t & program) {
     const inst_lib_t & ilib = program.GetInstLib();
-    
+
     int expected_size = program.GetSize();
     size_t mut_cnt = 0;
     int rhead = 0;
 
     // assert that expected size must be in correct range
-    /////////////////////////////////////////// 
+    ///////////////////////////////////////////
     // Whole module duplications/deletions
     if (PER_MOD_DEL != 0.0 || PER_MOD_DUP != 0.0) {
-      
+
       // Scan for modules
       size_t mod_mut_cnt = 0;
       emp::vector<ModuleInfo> modules;  // Modules we're going to dup or delete.
       emp::vector<size_t> module_membership(program.GetSize(), 0);
       emp::vector<bool> dels(program.GetSize(), false);
       emp::vector<size_t> danglers;
-      
+
       for (size_t i = 0; i < program.GetSize(); ++i) {
         // inst_t & inst = program[i];
         if (ilib.HasProperty(program[i].id, inst_prop_t::MODULE)) {
@@ -84,7 +85,7 @@ struct TagLGPMutator {
         if (modules[0].begin == 0) { modules.back().end = program.GetSize(); }  // Case where last module does not wrap.
         else { modules.back().end = modules[0].begin-1; }                       // Last module wraps around.
         for (size_t i = 0; i < danglers.size(); ++i) {
-          modules.back().positions.emplace_back(danglers[i]); 
+          modules.back().positions.emplace_back(danglers[i]);
           module_membership[i] = modules.size()-1;
         }
       }
@@ -106,24 +107,24 @@ struct TagLGPMutator {
         bool mod_dup = rnd.P(PER_MOD_DUP);
         bool mod_del = rnd.P(PER_MOD_DEL);
         if (mod_dup && mod_del) { mod_dup = false; mod_dup = false; } // If we would both dup and delete module, do nothing instead.
-        if (mod_dup && ((expected_size + modules[i].GetSize()) <= MAX_PROGRAM_LEN) ) { 
-          mod_mut_cnt++; 
-          mut_cnt++; 
-          modules[i].mut = ModuleMutType::DUP; 
-          expected_size += modules[i].GetSize(); 
+        if (mod_dup && ((expected_size + modules[i].GetSize()) <= MAX_PROGRAM_LEN) ) {
+          mod_mut_cnt++;
+          mut_cnt++;
+          modules[i].mut = ModuleMutType::DUP;
+          expected_size += modules[i].GetSize();
         }
-        if (mod_del && (((int)expected_size - (int)modules[i].GetSize()) >= (int)MIN_PROGRAM_LEN) ) { 
-          mod_mut_cnt++; 
-          mut_cnt++; 
-          modules[i].mut = ModuleMutType::DEL; 
-          expected_size -= modules[i].GetSize(); 
+        if (mod_del && (((int)expected_size - (int)modules[i].GetSize()) >= (int)MIN_PROGRAM_LEN) ) {
+          mod_mut_cnt++;
+          mut_cnt++;
+          modules[i].mut = ModuleMutType::DEL;
+          expected_size -= modules[i].GetSize();
           for (size_t p = 0; p < modules[i].GetSize(); ++p) dels[modules[i].positions[p]] = true;
         }
       }
-      
+
       // Do all of the dups/deletions
       if (mod_mut_cnt > 0) {
-        program_t new_program(program.GetInstLibPtr()); // Program we're writing to. (will be copied over.) 
+        program_t new_program(program.GetInstLibPtr()); // Program we're writing to. (will be copied over.)
         // for (rhead = 0; rhead < program.GetSize(); ++rhead) {
         rhead = 0;
         while ((int)new_program.GetSize() < expected_size) {
@@ -166,16 +167,16 @@ struct TagLGPMutator {
         const int slip_dup_size = 1 + (int)slip_end - (int)slip_begin;
         const int slip_del_size = 1 + (int)slip_begin - (int)slip_end;
 
-        if (slip_dup && ((expected_size+slip_dup_size) > (int)MAX_PROGRAM_LEN)) { 
+        if (slip_dup && ((expected_size+slip_dup_size) > (int)MAX_PROGRAM_LEN)) {
           // If slip-dup would break constraints, don't slip.
-          slip = false; slip_dup=false; 
-        } 
+          slip = false; slip_dup=false;
+        }
         if (slip_dup) { expected_size += slip_dup_size; }
 
-        if (slip_del && ((expected_size-slip_del_size) < (int)MIN_PROGRAM_LEN)) { 
+        if (slip_del && ((expected_size-slip_del_size) < (int)MIN_PROGRAM_LEN)) {
           // If slip-del would break constraints, don't slip.
-          slip = false; slip_del = false; 
-        } 
+          slip = false; slip_del = false;
+        }
         if (slip_del) { expected_size -= slip_del_size; }
 
       }
@@ -198,7 +199,7 @@ struct TagLGPMutator {
         rhead = slip_begin;
         continue;
       }
-      
+
       // Instruction deletion
       if (rnd.P(PER_INST_DEL) && ((expected_size-1)>=(int)MIN_PROGRAM_LEN)) {
         --expected_size;
@@ -240,15 +241,25 @@ struct TagLGPMutator {
       // - tag arguments (if there are none, will never enter for loop)
       for (size_t arg = 0; arg < new_program[whead].arg_tags.size(); ++arg) {
         tag_t & tag = new_program[whead].arg_tags[arg];
-        for (size_t k = 0; k < tag.GetSize(); ++k) {
-          if (rnd.P(PER_BIT_FLIP)) {
-            ++mut_cnt;
-            tag.Toggle(k);
+        // Randomize!
+        bool randomized = false;
+        if (PER_TAG_RANDOMIZE > 0.0) {
+          if (rnd.P(PER_TAG_RANDOMIZE)) {
+            tag.Randomize(rnd);
+            randomized = true;
+          }
+        }
+        // Bit-flips! (but only if we didn't randomize)
+        if (!randomized) {
+          for (size_t k = 0; k < tag.GetSize(); ++k) {
+            if (rnd.P(PER_BIT_FLIP)) {
+              ++mut_cnt;
+              tag.Toggle(k);
+            }
           }
         }
       }
     }
-
     program = new_program;
     return mut_cnt;
   }
