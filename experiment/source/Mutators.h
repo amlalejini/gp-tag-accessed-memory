@@ -247,6 +247,7 @@ struct TagLGPMutator {
           if (rnd.P(PER_TAG_RANDOMIZE)) {
             tag.Randomize(rnd);
             randomized = true;
+            ++mut_cnt;
           }
         }
         // Bit-flips! (but only if we didn't randomize)
