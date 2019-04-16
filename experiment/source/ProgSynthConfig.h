@@ -29,6 +29,8 @@ EMP_BUILD_CONFIG(ProgramSynthesisConfig,
   VALUE(PROG_MUT__PER_MOD_DEL, double, 0.05, "Program per-module whole-module deletion rate."),
 
   GROUP(HARDWARE_GROUP, "Settings specific to TagLGP virtual hardware"),
+  VALUE(MEM_TAG_INIT_MODE, size_t, 0, "How should we initialize hardware memory tags?\n0: Hadamard matrix \n1: Randomly"),
+  VALUE(MEM_TAG_EVOLVE, bool, false, "Should memory tags co-evolve with programs?"),
   VALUE(MIN_TAG_SPECIFICITY, double, 0.0, "What is the minimum tag similarity required for a tag to successfully reference another tag?"),
   VALUE(MAX_CALL_DEPTH, size_t, 128, "Maximum depth of hardware's call stack."),
 

@@ -80,10 +80,10 @@ namespace TagLGP {
       size_t iter;
 
       Flow(FlowType _type, size_t _begin, size_t _end,
-           size_t _mptr, size_t _iptr) 
-        : type(_type), 
-          begin(_begin), 
-          end(_end), 
+           size_t _mptr, size_t _iptr)
+        : type(_type),
+          begin(_begin),
+          end(_end),
           iptr(_iptr),
           mptr(_mptr),
           iter(0)
@@ -128,12 +128,12 @@ namespace TagLGP {
       bool IsCircular() const { return circular; }
       bool IsFlow() const { return !flow_stack.empty(); }
 
-      size_t GetMP() const { 
-        if (flow_stack.size()) return flow_stack.back().mptr; 
+      size_t GetMP() const {
+        if (flow_stack.size()) return flow_stack.back().mptr;
         else return (size_t)-1;
       }
-      
-      size_t GetIP() const { 
+
+      size_t GetIP() const {
         if (flow_stack.size()) return flow_stack.back().iptr;
         else return (size_t)-1;
       }
@@ -145,28 +145,28 @@ namespace TagLGP {
       memory_t & GetInputMem() { return input_mem; }
       memory_t & GetOutputMem() { return output_mem; }
 
-      void SetMP(size_t mp) { 
+      void SetMP(size_t mp) {
         if (flow_stack.size()) flow_stack.back().mptr = mp;
       }
 
-      void SetIP(size_t ip) { 
-        if (flow_stack.size()) flow_stack.back().iptr = ip; 
+      void SetIP(size_t ip) {
+        if (flow_stack.size()) flow_stack.back().iptr = ip;
       }
-      
-      void AdvanceIP(size_t inc=1) { 
-        if (flow_stack.size()) flow_stack.back().iptr += inc; 
+
+      void AdvanceIP(size_t inc=1) {
+        if (flow_stack.size()) flow_stack.back().iptr += inc;
       }
-    
+
     };
-    
+
     /// Structure of this class hails from C++ Primer 5th Ed. By Lippman, Lajoie, and Moo.
     class MemoryValue {
       public:
         enum MemoryType { NUM=0, STR=1};
-        
+
       protected:
         MemoryType type;
-        
+
         std::string default_str;
         double default_num;
 
@@ -191,18 +191,18 @@ namespace TagLGP {
         }
 
       public:
-        MemoryValue() 
-          : type(MemoryType::NUM), 
-            default_str(""), 
+        MemoryValue()
+          : type(MemoryType::NUM),
+            default_str(""),
             default_num(0),
-            num(default_num) 
+            num(default_num)
         { ; }
 
-        MemoryValue(const MemoryValue & p) 
+        MemoryValue(const MemoryValue & p)
           : type(p.type),
             default_str(p.default_str),
             default_num(p.default_num)
-        { 
+        {
           CopyUnion(p); // Copy union doesn't delete anything
         }
 
@@ -251,15 +251,15 @@ namespace TagLGP {
         }
 
         // If the union holds a non built-in type, we need to destroy it.
-        ~MemoryValue() { 
+        ~MemoryValue() {
           using std::string;
-          if (type == MemoryType::STR) str.~string(); 
+          if (type == MemoryType::STR) str.~string();
         }
 
         const std::string & GetDefaultStr() const { return default_str; }
         double GetDefaultNum() const { return default_num; }
-        
-        std::string & GetStr() { 
+
+        std::string & GetStr() {
           if (type == MemoryType::STR) {
             return str;
           } else {
@@ -295,14 +295,14 @@ namespace TagLGP {
     /// Memory class to manage TagLGP memory.
     class Memory {
       public:
-        
+
         struct MemoryPosition {
           bool is_vector;
           bool set;
           emp::vector<MemoryValue> pos;
 
           MemoryPosition(const MemoryValue & val=MemoryValue(), bool is_vec=false)
-            : is_vector(is_vec), 
+            : is_vector(is_vec),
               set(false),
               pos(1, val) { ; }
           MemoryPosition(const MemoryPosition &) = default;
@@ -335,9 +335,9 @@ namespace TagLGP {
 
       protected:
         emp::vector<MemoryPosition> memory;
-        
+
       public:
-        Memory(size_t size, const MemoryValue & default_value=MemoryValue()) 
+        Memory(size_t size, const MemoryValue & default_value=MemoryValue())
           : memory(size, {default_value})
         { ; }
 
@@ -382,7 +382,7 @@ namespace TagLGP {
           emp_assert(id < memory.size());
           emp_assert(memory[id].pos.size());
           memory[id].set = true;          // Memory becomes set on access by reference.
-          return memory[id].pos[0];          
+          return memory[id].pos[0];
         }
 
         emp::vector<MemoryValue> & AccessVec(size_t id) {
@@ -404,7 +404,7 @@ namespace TagLGP {
           memory[id] = other;
           memory[id].set = true;
         }
-        
+
         /// Set memory[id] = vector of MemoryValues
         void Set(size_t id, const emp::vector<MemoryValue> & val_vec) {
           emp_assert(id < memory.size());
@@ -508,7 +508,7 @@ namespace TagLGP {
         return emp::Has(in_module, ip);
       }
     };
-    
+
     /// Program instruction struct.
     /// - For this work: supports both numeric arguments AND tag-based arguments.
     struct Instruction {
@@ -516,7 +516,7 @@ namespace TagLGP {
       emp::vector<tag_t> arg_tags;
       emp::vector<size_t> arg_nums;
 
-      Instruction(size_t _id=0, 
+      Instruction(size_t _id=0,
                   const emp::vector<tag_t> & _arg_tags=emp::vector<tag_t>(),
                   const emp::vector<size_t> & _arg_nums=emp::vector<size_t>())
         : id(_id), arg_tags(_arg_tags), arg_nums(_arg_nums) { ; }
@@ -582,7 +582,7 @@ namespace TagLGP {
         id = other.id;
         arg_tags = other.arg_tags;
         arg_nums = other.arg_nums;
-      } 
+      }
 
     };
 
@@ -592,7 +592,7 @@ namespace TagLGP {
 
       Program(emp::Ptr<const inst_lib_t> _ilib, const inst_seq_t & _prog=inst_seq_t())
         : inst_lib(_ilib), program(_prog){ ; }
-      
+
       Program(const Program &) = default;
 
       bool operator==(const Program & in) const { return program == in.program; }
@@ -600,9 +600,9 @@ namespace TagLGP {
       bool operator<(const Program & other) const { return program < other.program; }
 
       /// Allow program's instruction sequence to be indexed as if a vector.
-      Instruction & operator[](size_t id) { 
+      Instruction & operator[](size_t id) {
         emp_assert(id < program.size());
-        return program[id]; 
+        return program[id];
       }
 
       /// Allow program's instruction sequence to be indexed as if a vector.
@@ -726,7 +726,7 @@ namespace TagLGP {
         }
       }
 
-      /// Print full program as valid CSV entry. 
+      /// Print full program as valid CSV entry.
       /// "[InstName(1111,1111,1111),InstName(1111,1111,1111),...]"
       void PrintCSVEntry(std::ostream & os=std::cout) const {
         os << "\"[";
@@ -746,7 +746,7 @@ namespace TagLGP {
     bool random_owner;
 
     program_t program;
-    
+
     emp::vector<module_t> modules;
 
     MemoryValue default_mem_val;
@@ -787,7 +787,7 @@ namespace TagLGP {
       // Closing a LOOP flow:
       const size_t loop_begin = state.GetTopFlow().begin;
       const size_t mp = state.GetTopFlow().mptr;
-      
+
       state.GetFlowStack().pop_back();
 
       if (state.IsFlow()) {
@@ -867,16 +867,16 @@ namespace TagLGP {
         max_call_depth(DEFAULT_MAX_CALL_DEPTH),
         min_tag_specificity(DEFAULT_MIN_TAG_SPECIFICITY),
         is_executing(false)
-    { 
+    {
       // If no random number generator is provided, create one (taking ownership).
-      if (!rnd) NewRandom(); 
+      if (!rnd) NewRandom();
     }
 
-    TagLinearGP_TW(inst_lib_t & _ilib, 
+    TagLinearGP_TW(inst_lib_t & _ilib,
                   emp::Ptr<emp::Random> rnd=nullptr)
       : TagLinearGP_TW(&_ilib, rnd) { ; }
-    
-    TagLinearGP_TW(const hardware_t & in) 
+
+    TagLinearGP_TW(const hardware_t & in)
       : random_ptr(nullptr), random_owner(false),
         program(in.program),
         modules(in.modules),
@@ -900,9 +900,9 @@ namespace TagLGP {
 
     /// Set program for this hardware object.
     /// After updating hardware's program, run UpdateModules to update module definitions.
-    void SetProgram(const program_t & _program) { 
+    void SetProgram(const program_t & _program) {
       emp_assert(!is_executing);
-      program = _program; 
+      program = _program;
       UpdateModules();
     }
 
@@ -958,7 +958,7 @@ namespace TagLGP {
         inst_t & inst = program[pos];
         // Is this a module definition?
         if (ilib.HasProperty(inst.id, inst_prop_t::MODULE)) {
-          if (modules.size()) { modules.back().end = pos; } 
+          if (modules.size()) { modules.back().end = pos; }
           const size_t mod_id = modules.size();
           modules.emplace_back(mod_id, (pos+1)%program.GetSize(), -1, inst.arg_tags[0]);
         } else {
@@ -1010,7 +1010,7 @@ namespace TagLGP {
             ip = 0;
             top_flow.iptr = 1;
             GetInstLib().ProcessInst(*this, program[ip]);
-          } else { 
+          } else {
             CloseFlow(state, true);
             continue;
           }
@@ -1034,7 +1034,7 @@ namespace TagLGP {
       OpenFlow(state, {FlowType::ROUTINE, module.begin, module.end, module.id, module.begin});
     }
 
-    void OpenFlow(CallState & state, FlowType type, 
+    void OpenFlow(CallState & state, FlowType type,
                   size_t begin, size_t end, size_t mptr, size_t iptr) {
       OpenFlow(state, {type, begin, end, mptr, iptr});
     }
@@ -1088,7 +1088,7 @@ namespace TagLGP {
       // state's memory appropriately; otherwise, leave defaults.
       if (call_stack.size() > 1) {
         CallState & new_state = call_stack.back();
-        CallState & caller_state = call_stack[call_stack.size() - 2]; 
+        CallState & caller_state = call_stack[call_stack.size() - 2];
         Memory & new_input_mem = new_state.GetInputMem();
         Memory & caller_working_mem = caller_state.GetWorkingMem();
         for (size_t i = 0; i < mem_size; ++i) {
@@ -1111,7 +1111,7 @@ namespace TagLGP {
         emp_assert(returning_state.GetTopFlow().type == FlowType::CALL, "Bottom flow should be the call.", returning_state.GetTopFlow().type);
         CloseFlow(returning_state, implicit);
         return;
-      }  
+      }
 
       // Is there anything to return to?
       if (call_stack.size() > 1) {
@@ -1120,14 +1120,14 @@ namespace TagLGP {
         Memory & out_mem = returning_state.GetOutputMem();
         Memory & working_mem = caller_state.GetWorkingMem();
         for (size_t i = 0; i < mem_size; ++i) {
-          if (out_mem.IsSet(i)) { working_mem.Set(i, out_mem.GetPos(i)); } 
+          if (out_mem.IsSet(i)) { working_mem.Set(i, out_mem.GetPos(i)); }
         }
       }
 
       // Pop returning state from call stack.
       call_stack.pop_back();
     }
-    
+
     // ---------------------------- Accessors ----------------------------
     /// Get instruction library associated with hardware's program.
     emp::Ptr<const inst_lib_t> GetInstLibPtr() const { return program.GetInstLibPtr(); }
@@ -1135,7 +1135,7 @@ namespace TagLGP {
 
     /// Get random number generator.
     emp::Random & GetRandom() { return *random_ptr; }
-    
+
     /// Get pointer to random number generator.
     emp::Ptr<emp::Random> GetRandomPtr() { return random_ptr; }
 
@@ -1170,7 +1170,7 @@ namespace TagLGP {
       return call_stack.back();
     }
 
-    const CallState & GetCurCallState() const { 
+    const CallState & GetCurCallState() const {
       emp_assert(call_stack.size(), "Cannot query for current call state if call stack is empty.");
       return call_stack.back();
     }
@@ -1187,7 +1187,7 @@ namespace TagLGP {
     }
 
     /// Find best memory match using the simple matching coefficient
-    size_t FindBestMemoryMatch_SMC(const Memory & mem, const tag_t & tag, double threshold=0.0, MemPosType mem_type=MemPosType::ANY) { 
+    size_t FindBestMemoryMatch_SMC(const Memory & mem, const tag_t & tag, double threshold=0.0, MemPosType mem_type=MemPosType::ANY) {
       emp::vector<size_t> best_matches;
       for (size_t i = 0; i < mem_tags.size(); ++i) {
         // ANY, VEC, STR, NUM
@@ -1209,7 +1209,7 @@ namespace TagLGP {
     }
 
     /// Find best memory match using the simple matching coefficient
-    size_t FindBestMemoryMatch_SMC(const Memory & mem, const tag_t & tag, std::unordered_set<MemPosType> mem_types, double threshold=0.0) { 
+    size_t FindBestMemoryMatch_SMC(const Memory & mem, const tag_t & tag, std::unordered_set<MemPosType> mem_types, double threshold=0.0) {
       emp::vector<size_t> best_matches;
       for (size_t i = 0; i < mem_tags.size(); ++i) {
         // ANY, VEC, STR, NUM
@@ -1229,10 +1229,10 @@ namespace TagLGP {
         return (size_t)-1;
       }
     }
-  
+
     /// Return best matching memory
     /// TODO - configurable tie-breaking procedure
-    size_t FindBestMemoryMatch(const Memory & mem, const tag_t & tag, double threshold=0.0, MemPosType mem_type=MemPosType::ANY) { 
+    size_t FindBestMemoryMatch(const Memory & mem, const tag_t & tag, double threshold=0.0, MemPosType mem_type=MemPosType::ANY) {
       double dist_thresh = TAG_WIDTH - (threshold * (double)TAG_WIDTH);
       emp::vector<size_t> best_matches;
       for (size_t i = 0; i < mem_tags.size(); ++i) {
@@ -1255,7 +1255,7 @@ namespace TagLGP {
       }
     }
 
-    size_t FindBestMemoryMatch(const Memory & mem, const tag_t & tag, std::unordered_set<MemPosType> mem_types, double threshold=0.0) { 
+    size_t FindBestMemoryMatch(const Memory & mem, const tag_t & tag, std::unordered_set<MemPosType> mem_types, double threshold=0.0) {
       double dist_thresh = TAG_WIDTH - (threshold * (double)TAG_WIDTH);
       // TODO - type checking
       emp::vector<size_t> best_matches;
@@ -1315,7 +1315,7 @@ namespace TagLGP {
       return (size_t)-1;
     }
 
-    size_t FindBestModuleMatch(const tag_t & tag, double threshold=0.0) { 
+    size_t FindBestModuleMatch(const tag_t & tag, double threshold=0.0) {
       emp::vector<size_t> best_matches;
       for (size_t i = 0; i < modules.size(); ++i) {
         double match = emp::SimpleMatchCoeff(tag, modules[i].tag);
@@ -1371,8 +1371,8 @@ namespace TagLGP {
           // to the initial flow.
           if (depth_counter == 0) break;
         }
-        seen.emplace(ip); 
-        ++ip; 
+        seen.emplace(ip);
+        ++ip;
         if (ip >= program.GetSize() && seen.size() < modules[mp].GetLen()) ip %= program.GetSize(); // Wrap ip around
       }
       // std::cout << "EOF=" << ip << std::endl;
@@ -1389,7 +1389,7 @@ namespace TagLGP {
         default: return "UNKNOWN";
       }
     }
-    
+
     void PrintModules(std::ostream & os=std::cout) {
       os << "Modules: {";
       for (size_t i = 0; i < modules.size(); ++i) {
@@ -1428,7 +1428,7 @@ namespace TagLGP {
         memory.GetPos(i).Print(os);
         if (!memory.IsSet(i)) { os << " (unset)"; }
         os << "\n";
-      } 
+      }
     }
 
     void PrintHardwareMemoryVerbose(std::ostream & os=std::cout) {
@@ -1444,7 +1444,7 @@ namespace TagLGP {
       for (int ci = (int)call_stack.size()-1; ci >= 0; --ci) {
         CallState & state = call_stack[ci];
         os << "Local Memory (stack id=" << ci << ")\n";
-        
+
         os << "  -- Input Memory -- \n";
         for (size_t i = 0; i < mem_size; ++i) {
           os << "    mem[" << i << "](";
@@ -1453,7 +1453,7 @@ namespace TagLGP {
           state.GetInputMem().GetPos(i).Print(os);
           if (!state.GetInputMem().IsSet(i)) { os << " (unset)"; }
           os << "\n";
-        } 
+        }
 
         os << "  -- Working Memory -- \n";
         for (size_t i = 0; i < mem_size; ++i) {
@@ -1463,7 +1463,7 @@ namespace TagLGP {
           state.GetWorkingMem().GetPos(i).Print(os);
           if (!state.GetWorkingMem().IsSet(i)) { os << " (unset)"; }
           os << "\n";
-        } 
+        }
 
         os << "  -- Output Memory -- \n";
         for (size_t i = 0; i < mem_size; ++i) {
@@ -1473,7 +1473,7 @@ namespace TagLGP {
           state.GetOutputMem().GetPos(i).Print(os);
           if (!state.GetOutputMem().IsSet(i)) { os << " (unset)"; }
           os << "\n";
-        } 
+        }
 
       }
     }
@@ -1497,7 +1497,7 @@ namespace TagLGP {
           os << "ip:" << flow.iptr << ",";
           os << "begin:" << flow.begin << ",";
           os << "end:" << flow.end << ",";
-          os << "iter:" << flow.iter; 
+          os << "iter:" << flow.iter;
           os << "}";
           if (fi) os << ",";
         }
@@ -1520,19 +1520,19 @@ namespace TagLGP {
         os << "  Output memory (size=" << state.GetOutputMem().GetSize() << "):\n";
         PrintMemoryVerbose(state.GetOutputMem(), mem_tags, os, "    ");
       }
-      os << "----------BOTTOM----------\n"; 
+      os << "----------BOTTOM----------\n";
     }
 
     void PrintHardwareStateFlat(std::ostream & os=std::cout) {
       // os << "Global memory tags: ";
       // os << "Input memory tags: ";
       // os << "Working memory tags: ";
-      // os << "Output memory tags: ";   
+      // os << "Output memory tags: ";
       // Print state of global memory
       os << "Global memory (size=" << global_mem.GetSize() << "):";
       global_mem.Print(os);
       os << "\n";
-      
+
       // Print call stack
       os << "Call stack (size=" << call_stack.size() << "):\n";
       for (int ci = (int)call_stack.size()-1; ci >= 0; --ci) {
@@ -1563,7 +1563,7 @@ namespace TagLGP {
         state.GetWorkingMem().Print(os);
         os << "\n";
       }
-      os << "----------BOTTOM----------\n"; 
+      os << "----------BOTTOM----------\n";
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1972,7 +1972,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -1992,7 +1992,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], {MemPosType::NUM, MemPosType::STR}, hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -2004,7 +2004,7 @@ namespace TagLGP {
     static void Inst_VecLen(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -2017,7 +2017,7 @@ namespace TagLGP {
     static void Inst_VecAppend(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], {MemPosType::NUM, MemPosType::STR}, hw.GetMinTagSpecificity());
@@ -2031,7 +2031,7 @@ namespace TagLGP {
     static void Inst_VecPop(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -2046,11 +2046,11 @@ namespace TagLGP {
     }
 
     /// Instruction: VecRemove (VEC, NUM)
-    /// 
+    ///
     static void Inst_VecRemove(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity(), MemPosType::NUM);
@@ -2073,12 +2073,12 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], {MemPosType::NUM, MemPosType::STR}, hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue remove_val(wmem.AccessVal(posB));
       MemoryValue replace_val(wmem.AccessVal(posC));
       for (size_t i = 0; i < vec.size(); ++i) {
-        if (vec[i] == remove_val) vec[i] = replace_val; 
+        if (vec[i] == remove_val) vec[i] = replace_val;
       }
     }
 
@@ -2093,7 +2093,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       bool found = false;
@@ -2117,7 +2117,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       size_t cnt = 0;
@@ -2135,7 +2135,7 @@ namespace TagLGP {
 
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       std::reverse(std::begin(vec), std::end(vec));
     }
@@ -2150,9 +2150,9 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity(), MemPosType::NUM);
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
-      
+
       const size_t ai = (size_t)wmem.AccessVal(posB).GetNum();
       const size_t bi = (size_t)wmem.AccessVal(posC).GetNum();
 
@@ -2162,7 +2162,7 @@ namespace TagLGP {
         double b = (vec[bi].GetType() == MemoryValue::MemoryType::NUM) ? vec[bi].GetNum() : 0;
         if (a < b) {
           std::swap(vec[ai], vec[bi]);
-        } 
+        }
       }
     }
 
@@ -2200,7 +2200,7 @@ namespace TagLGP {
     static void Inst_StrLength(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity(), MemPosType::STR);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -2293,13 +2293,13 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;    // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0 
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2320,13 +2320,13 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true; // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() != 0) skip = true;       // Skip if best match != 0 
+      else if (wmem.AccessVal(posA).GetNum() != 0) skip = true;       // Skip if best match != 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2347,13 +2347,13 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;    // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0 
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2375,13 +2375,13 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;    // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0 
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2409,14 +2409,14 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity(), MemPosType::VEC);
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA) || !hw.IsValidMemPos(posB)) skip = true;                       // SKip if failed to find valid mem pos
       else if (state.GetTopFlow().iter >= wmem.AccessVec(posB).size()) skip = true;
-  
+
       if (skip) {
         state.SetIP(eof);
         state.GetTopFlow().iter = 0; // Loop's parent flow
@@ -2814,14 +2814,14 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       emp_assert(inst.arg_nums.size() >= 1);
       size_t posA = inst.arg_nums[0];
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                        // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;  // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;        // Skip if best match = 0 
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;        // Skip if best match = 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2842,14 +2842,14 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       emp_assert(inst.arg_nums.size() >= 1);
       size_t posA = inst.arg_nums[0];
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true; // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() != 0) skip = true;       // Skip if best match != 0 
+      else if (wmem.AccessVal(posA).GetNum() != 0) skip = true;       // Skip if best match != 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2870,14 +2870,14 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       emp_assert(inst.arg_nums.size() >= 1);
       size_t posA = inst.arg_nums[0];
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;    // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0 
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2899,14 +2899,14 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       emp_assert(inst.arg_nums.size() >= 1);
       size_t posA = inst.arg_nums[0];
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA)) skip = true;                       // SKip if failed to find valid mem pos
       else if (wmem.GetPosType(posA) != MemPosType::NUM) skip = true;    // Skip if best match is not a number
-      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0 
+      else if (wmem.AccessVal(posA).GetNum() == 0) skip = true;       // Skip if best match = 0
 
       if (skip) {
         state.SetIP(eof);
@@ -2966,7 +2966,7 @@ namespace TagLGP {
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
       size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -2983,7 +2983,7 @@ namespace TagLGP {
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
       size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(wmem, posC, {MemPosType::NUM, MemPosType::STR})) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -2994,7 +2994,7 @@ namespace TagLGP {
     static void Inst_VecLen__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       // Find arguments
       emp_assert(inst.arg_nums.size() >= 2);
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
@@ -3011,7 +3011,7 @@ namespace TagLGP {
       emp_assert(inst.arg_nums.size() >= 2);
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, {MemPosType::NUM, MemPosType::STR})) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       vec.emplace_back(wmem.AccessVal(posB));
     }
@@ -3024,7 +3024,7 @@ namespace TagLGP {
       emp_assert(inst.arg_nums.size() >= 2);
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(posB)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       if (vec.size()) {
         MemoryValue val(vec.back()); // Need to do things this way because vector could be overwritten with pop.
@@ -3041,7 +3041,7 @@ namespace TagLGP {
       emp_assert(inst.arg_nums.size() >= 2);
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -3058,12 +3058,12 @@ namespace TagLGP {
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, {MemPosType::NUM, MemPosType::STR})) return;
       size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(wmem, posC, {MemPosType::NUM, MemPosType::STR})) return;
-  
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue remove_val(wmem.AccessVal(posB));
       MemoryValue replace_val(wmem.AccessVal(posC));
       for (size_t i = 0; i < vec.size(); ++i) {
-        if (vec[i] == remove_val) vec[i] = replace_val; 
+        if (vec[i] == remove_val) vec[i] = replace_val;
       }
     }
 
@@ -3076,7 +3076,7 @@ namespace TagLGP {
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, {MemPosType::NUM, MemPosType::STR})) return;
       size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       bool found = false;
@@ -3099,7 +3099,7 @@ namespace TagLGP {
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, {MemPosType::NUM, MemPosType::STR})) return;
       size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       size_t cnt = 0;
@@ -3118,7 +3118,7 @@ namespace TagLGP {
       // Find arguments
       emp_assert(inst.arg_nums.size() >= 3);
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       std::reverse(std::begin(vec), std::end(vec));
     }
@@ -3132,9 +3132,9 @@ namespace TagLGP {
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return;
       size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(wmem, posC, MemPosType::NUM)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
-      
+
       const size_t ai = (size_t)wmem.AccessVal(posB).GetNum();
       const size_t bi = (size_t)wmem.AccessVal(posC).GetNum();
 
@@ -3144,7 +3144,7 @@ namespace TagLGP {
         double b = (vec[bi].GetType() == MemoryValue::MemoryType::NUM) ? vec[bi].GetNum() : 0;
         if (a < b) {
           std::swap(vec[ai], vec[bi]);
-        } 
+        }
       }
     }
 
@@ -3187,7 +3187,7 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-    
+
       emp_assert(inst.arg_nums.size() >= 2);
       size_t posA = inst.arg_nums[0];
       size_t posB = inst.arg_nums[1];
@@ -3195,7 +3195,7 @@ namespace TagLGP {
       bool skip = false;
       if (!hw.IsValidMemPos(posA) || !hw.IsValidMemPos(wmem, posB, MemPosType::VEC)) skip = true;                       // SKip if failed to find valid mem pos
       else if (state.GetTopFlow().iter >= wmem.AccessVec(posB).size()) skip = true;
-  
+
       if (skip) {
         state.SetIP(eof);
         state.GetTopFlow().iter = 0; // Loop's parent flow
@@ -3220,7 +3220,7 @@ namespace TagLGP {
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(posB)) return;
 
       wmem.Set(posB, (double)(wmem.GetPosType(posA) == MemPosType::VEC));
-    } 
+    }
 
     static void Inst_IsStr__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
@@ -3237,7 +3237,7 @@ namespace TagLGP {
     static void Inst_StrLength__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       // Find arguments
       emp_assert(inst.arg_nums.size() >= 2);
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::STR)) return;
@@ -3249,13 +3249,13 @@ namespace TagLGP {
     static void Inst_StrConcat__NUM_ARGS(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       // Find arguments
       emp_assert(inst.arg_nums.size() >= 2);
       size_t posA = inst.arg_nums[0]; if (!hw.IsValidMemPos(wmem, posA, MemPosType::STR)) return;
       size_t posB = inst.arg_nums[1]; if (!hw.IsValidMemPos(wmem, posB, MemPosType::STR)) return;
       size_t posC = inst.arg_nums[2]; if (!hw.IsValidMemPos(posC)) return;
-      
+
       //  mem[C] = mem[A] + mem[B]
       const std::string & A = wmem.AccessVal(posA).GetStr();
       const std::string & B = wmem.AccessVal(posB).GetStr();
@@ -3267,7 +3267,7 @@ namespace TagLGP {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // ------- TAG-BASED MEMORY (NO TYPE SEARCH) Instructions --------
-    // Note: I did not re-implement instructions that did not take memory position data type into account when 
+    // Note: I did not re-implement instructions that did not take memory position data type into account when
     //       searching for the best matching memory position (e.g., If, While, SwapMem, etc).
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3526,7 +3526,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -3544,7 +3544,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posC, {MemPosType::NUM, MemPosType::STR})) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -3555,7 +3555,7 @@ namespace TagLGP {
     static void Inst_VecLen__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -3567,7 +3567,7 @@ namespace TagLGP {
     static void Inst_VecAppend__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -3580,7 +3580,7 @@ namespace TagLGP {
     static void Inst_VecPop__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -3597,7 +3597,7 @@ namespace TagLGP {
     static void Inst_VecRemove__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -3620,12 +3620,12 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(wmem, posB, {MemPosType::NUM, MemPosType::STR})) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posC, {MemPosType::NUM, MemPosType::STR})) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue remove_val(wmem.AccessVal(posB));
       MemoryValue replace_val(wmem.AccessVal(posC));
       for (size_t i = 0; i < vec.size(); ++i) {
-        if (vec[i] == remove_val) vec[i] = replace_val; 
+        if (vec[i] == remove_val) vec[i] = replace_val;
       }
     }
 
@@ -3639,7 +3639,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(wmem, posB, {MemPosType::NUM, MemPosType::STR})) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       bool found = false;
@@ -3663,7 +3663,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(wmem, posB, {MemPosType::NUM, MemPosType::STR})) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       size_t cnt = 0;
@@ -3681,7 +3681,7 @@ namespace TagLGP {
 
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posA, MemPosType::VEC)) return; // Do nothing
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       std::reverse(std::begin(vec), std::end(vec));
     }
@@ -3696,9 +3696,9 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(wmem, posB, MemPosType::NUM)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posC, MemPosType::NUM)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
-      
+
       const size_t ai = (size_t)wmem.AccessVal(posB).GetNum();
       const size_t bi = (size_t)wmem.AccessVal(posC).GetNum();
 
@@ -3708,7 +3708,7 @@ namespace TagLGP {
         double b = (vec[bi].GetType() == MemoryValue::MemoryType::NUM) ? vec[bi].GetNum() : 0;
         if (a < b) {
           std::swap(vec[ai], vec[bi]);
-        } 
+        }
       }
     }
 
@@ -3741,7 +3741,7 @@ namespace TagLGP {
         wmem.Set(posB, vec.back());
       }
     }
-    
+
     static void Inst_Foreach__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
@@ -3751,14 +3751,14 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA) || !hw.IsValidMemPos(wmem, posB, MemPosType::VEC)) skip = true;                       // SKip if failed to find valid mem pos
       else if (state.GetTopFlow().iter >= wmem.AccessVec(posB).size()) skip = true;
-  
+
       if (skip) {
         state.SetIP(eof);
         state.GetTopFlow().iter = 0; // Loop's parent flow
@@ -3773,10 +3773,10 @@ namespace TagLGP {
       }
     }
 
-    static void Inst_StrLength__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) { 
+    static void Inst_StrLength__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posA, MemPosType::STR)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_tags[1], hw.GetMinTagSpecificity());
@@ -3785,10 +3785,10 @@ namespace TagLGP {
       wmem.Set(posB, wmem.AccessVal(posA).GetStr().size());
     }
 
-    static void Inst_StrConcat__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) { 
+    static void Inst_StrConcat__TAG_ARGS_NO_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       // Find arguments.
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_tags[0], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(wmem, posA, MemPosType::STR)) return; // Do nothing
@@ -3796,7 +3796,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(wmem, posB, MemPosType::STR)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_tags[2], hw.GetMinTagSpecificity());
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       //  mem[C] = mem[A] + mem[B]
       const std::string & A = wmem.AccessVal(posA).GetStr();
       const std::string & B = wmem.AccessVal(posB).GetStr();
@@ -3808,7 +3808,7 @@ namespace TagLGP {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // ------- Numeric argument instructions (Direct-indexed memory) --------
-    // Note: I did not re-implement instructions that did not take memory position data type into account when 
+    // Note: I did not re-implement instructions that did not take memory position data type into account when
     //       indexing into memory (e.g., If, While, SwapMem, etc).
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3816,7 +3816,7 @@ namespace TagLGP {
     static void Inst_Add__NUM_ARGS_WITH_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       // Find arguments.
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0], MemPosType::NUM);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
@@ -3824,7 +3824,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_nums[2]);
       if (!hw.IsValidMemPos(posC)) return; // Do nothing
-      
+
       //  mem[C] = mem[A] + mem[B]
       const double A = wmem.AccessVal(posA).GetNum();
       const double B = wmem.AccessVal(posB).GetNum();
@@ -4069,7 +4069,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_nums[2]);
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -4087,7 +4087,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_nums[2], {MemPosType::NUM, MemPosType::STR});
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       size_t i = (size_t)wmem.AccessVal(posB).GetNum();
       if (i < vec.size()) {
@@ -4098,7 +4098,7 @@ namespace TagLGP {
     static void Inst_VecLen__NUM_ARGS_WITH_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0], MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_nums[1]);
@@ -4110,7 +4110,7 @@ namespace TagLGP {
     static void Inst_VecAppend__NUM_ARGS_WITH_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0], MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_nums[1], {MemPosType::NUM, MemPosType::STR});
@@ -4123,7 +4123,7 @@ namespace TagLGP {
     static void Inst_VecPop__NUM_ARGS_WITH_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0], MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_nums[1]);
@@ -4140,7 +4140,7 @@ namespace TagLGP {
     static void Inst_VecRemove__NUM_ARGS_WITH_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0], MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_nums[1], MemPosType::NUM);
@@ -4163,12 +4163,12 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_nums[2], {MemPosType::NUM, MemPosType::STR});
       if (!hw.IsValidMemPos(posC)) return; // Do nothing
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue remove_val(wmem.AccessVal(posB));
       MemoryValue replace_val(wmem.AccessVal(posC));
       for (size_t i = 0; i < vec.size(); ++i) {
-        if (vec[i] == remove_val) vec[i] = replace_val; 
+        if (vec[i] == remove_val) vec[i] = replace_val;
       }
     }
 
@@ -4182,7 +4182,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_nums[2]);
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       bool found = false;
@@ -4206,7 +4206,7 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_nums[2]);
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       MemoryValue & val = wmem.AccessVal(posB);
       size_t cnt = 0;
@@ -4224,7 +4224,7 @@ namespace TagLGP {
 
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0], MemPosType::VEC);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
       std::reverse(std::begin(vec), std::end(vec));
     }
@@ -4239,9 +4239,9 @@ namespace TagLGP {
       if (!hw.IsValidMemPos(posB)) return; // Do nothing
       size_t posC = hw.FindBestMemoryMatch(wmem, inst.arg_nums[2], MemPosType::NUM);
       if (!hw.IsValidMemPos(posC)) return;
-      
+
       emp::vector<MemoryValue> & vec = wmem.AccessVec(posA);
-      
+
       const size_t ai = (size_t)wmem.AccessVal(posB).GetNum();
       const size_t bi = (size_t)wmem.AccessVal(posC).GetNum();
 
@@ -4251,7 +4251,7 @@ namespace TagLGP {
         double b = (vec[bi].GetType() == MemoryValue::MemoryType::NUM) ? vec[bi].GetNum() : 0;
         if (a < b) {
           std::swap(vec[ai], vec[bi]);
-        } 
+        }
       }
     }
 
@@ -4294,14 +4294,14 @@ namespace TagLGP {
       const size_t cur_mp = state.GetMP();
       size_t eof = hw.FindEndOfFlow(cur_mp, cur_ip);
       size_t bof = (cur_ip == 0) ? hw.GetProgram().GetSize() - 1 : cur_ip - 1;
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0]);
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_nums[1], MemPosType::VEC);
 
       bool skip = false;
       if (!hw.IsValidMemPos(posA) || !hw.IsValidMemPos(posB)) skip = true;                       // SKip if failed to find valid mem pos
       else if (state.GetTopFlow().iter >= wmem.AccessVec(posB).size()) skip = true;
-  
+
       if (skip) {
         state.SetIP(eof);
         state.GetTopFlow().iter = 0; // Loop's parent flow
@@ -4319,7 +4319,7 @@ namespace TagLGP {
     static void Inst_StrLength__NUM_ARGS_WITH_TYPE_SEARCH(hardware_t & hw, const inst_t & inst) {
       CallState & state = hw.GetCurCallState();
       memory_t & wmem = state.GetWorkingMem();
-      
+
       size_t posA = hw.FindBestMemoryMatch(wmem, inst.arg_nums[0], MemPosType::STR);
       if (!hw.IsValidMemPos(posA)) return; // Do nothing
       size_t posB = hw.FindBestMemoryMatch(wmem, inst.arg_nums[1]);

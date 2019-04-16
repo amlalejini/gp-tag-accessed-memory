@@ -118,6 +118,7 @@ constexpr size_t TAG_WIDTH = 16;
 constexpr size_t MEM_SIZE = TAG_WIDTH;
 
 enum PROGRAM_ARGUMENT_MODE_TYPE { TAG_ONLY=0, NUMERIC_ONLY=1, BOTH=2 };
+enum TAG_MEMORY_INIT_MODE_TYPE { HADAMARD=0, RANDOM=1 };
 
 // Some useful constants for each problem.
 constexpr double PROB_NUMBER_IO__DOUBLE_MIN = -100.0;
@@ -238,6 +239,9 @@ private:
   double PROG_MUT__PER_MOD_DUP;
   double PROG_MUT__PER_MOD_DEL;
 
+
+  size_t MEM_TAG_INIT_MODE;
+  bool MEM_TAG_EVOLVE;
   double MIN_TAG_SPECIFICITY;
   size_t MAX_CALL_DEPTH;
 
@@ -955,7 +959,28 @@ void ProgramSynthesisExperiment::SetupHardware() {
   eval_hardware->SetMemSize(MEM_SIZE);
   eval_hardware->SetMinTagSpecificity(MIN_TAG_SPECIFICITY);  // Configure minimum tag specificity required for tag-based referencing.
   eval_hardware->SetMaxCallDepth(MAX_CALL_DEPTH);            // Configure maximum depth of call stack (recursion limit).
-  eval_hardware->SetMemTags(GenHadamardMatrix<TAG_WIDTH>()); // Configure memory location tags. Use Hadamard matrix for given TAG_WIDTH.
+
+  // Configure memory tags
+  switch (MEM_TAG_INIT_MODE) {
+    case (size_t)TAG_MEMORY_INIT_MODE_TYPE::HADAMARD: {
+      std::cout << "Initializing evaluation hardware with memory tags generated using a Hadamard matrix." << std::endl;
+      eval_hardware->SetMemTags(GenHadamardMatrix<TAG_WIDTH>()); // Configure memory location tags. Use Hadamard matrix for given TAG_WIDTH.
+      break;
+    }
+    case (size_t)TAG_MEMORY_INIT_MODE_TYPE::RANDOM: {
+      std::cout << "Initializing evaluation hardware with memory tags generated randomly." << std::endl;
+      eval_hardware->SetMemTags(GenRandTags<TAG_WIDTH>(*random, MEM_SIZE, true));
+      break;
+    }
+    default: {
+      std::cout << "Unrecognized MEM_TAG_INIT_MODE (" << MEM_TAG_INIT_MODE << "). Exiting." << std::endl;
+      exit(-1);
+    }
+  }
+
+  std::cout << "=== MEMORY REGISTER TAGS (ignore if evolving) ===" << std::endl;
+  eval_hardware->PrintHardwareMemoryVerbose();
+  std::cout << "=== ===" << std::endl;
 
   // Configure call tag (tag used to call initial module during test evaluation).
   call_tag.Clear(); // Set initial call tag to all 0s.
@@ -1279,6 +1304,7 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
   PROG_MUT__PER_MOD_DUP = config.PROG_MUT__PER_MOD_DUP();
   PROG_MUT__PER_MOD_DEL = config.PROG_MUT__PER_MOD_DEL();
 
+  MEM_TAG_INIT_MODE = config.MEM_TAG_INIT_MODE();
   MIN_TAG_SPECIFICITY = config.MIN_TAG_SPECIFICITY();
   MAX_CALL_DEPTH = config.MAX_CALL_DEPTH();
 
