@@ -31,6 +31,7 @@ EMP_BUILD_CONFIG(ProgramSynthesisConfig,
   GROUP(HARDWARE_GROUP, "Settings specific to TagLGP virtual hardware"),
   VALUE(MEM_TAG_INIT_MODE, size_t, 0, "How should we initialize hardware memory tags?\n0: Hadamard matrix \n1: Randomly"),
   VALUE(MEM_TAG_EVOLVE, bool, false, "Should memory tags co-evolve with programs?"),
+  VALUE(MEM_TAG_MUT__PER_BIT_FLIP, double, 0.001, "Register tag per-bit flip rate (only relevant in register tag evo mode)."),
   VALUE(MIN_TAG_SPECIFICITY, double, 0.0, "What is the minimum tag similarity required for a tag to successfully reference another tag?"),
   VALUE(MAX_CALL_DEPTH, size_t, 128, "Maximum depth of hardware's call stack."),
 

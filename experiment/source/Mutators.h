@@ -8,6 +8,29 @@
 #include "TagLinearGP.h"
 #include "TagLinearGP_Utilities.h"
 
+/// Mutator for register tags
+template<size_t TAG_WIDTH>
+struct TagMutator {
+  using hardware_t = TagLGP::TagLinearGP_TW<TAG_WIDTH>;
+  using tag_t = typename hardware_t::tag_t;
+
+  double PER_BIT_FLIP;
+
+  size_t Mutate(emp::Random & rnd, emp::vector<tag_t> & tags) {
+    size_t mut_cnt = 0;
+    for (size_t i = 0; i < tags.size(); ++i) {
+      tag_t & tag = tags[i];
+      for (size_t k = 0; k < tag.GetSize(); ++k) {
+        if (rnd.P(PER_BIT_FLIP)) {
+          ++mut_cnt;
+          tag.Toggle(k);
+        }
+      }
+    }
+    return mut_cnt;
+  }
+};
+
 /// Mutator for tag LGP programs
 template<size_t TAG_WIDTH>
 struct TagLGPMutator {

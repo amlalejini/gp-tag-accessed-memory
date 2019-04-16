@@ -203,6 +203,8 @@ class ProgramSynthesisExperiment {
 public:
 
   using hardware_t = typename TagLGP::TagLinearGP_TW<TAG_WIDTH>;
+  using program_t = typename TagLGP::TagLinearGP_TW<TAG_WIDTH>::program_t;
+  using tag_t = typename hardware_t::tag_t;
   using inst_lib_t = typename TagLGP::InstLib<hardware_t>;
   using inst_t = typename hardware_t::inst_t;
   using inst_prop_t = typename inst_lib_t::InstProperty;
@@ -242,6 +244,7 @@ private:
 
   size_t MEM_TAG_INIT_MODE;
   bool MEM_TAG_EVOLVE;
+  double MEM_TAG_MUT__PER_BIT_FLIP;
   double MIN_TAG_SPECIFICITY;
   size_t MAX_CALL_DEPTH;
 
@@ -278,6 +281,7 @@ private:
 
   emp::Ptr<prog_world_t> prog_world;
   TagLGPMutator<TAG_WIDTH> prog_mutator;
+  TagMutator<TAG_WIDTH> reg_mutator;
 
   emp::vector<std::function<double(prog_org_t &)>> lexicase_prog_fit_set; /// Fitness function set for performing lexicase selection on programs.
 
@@ -418,6 +422,7 @@ private:
     std::function<size_t(void)> get_num_arg_inst_cnt;
     std::function<size_t(void)> get_no_arg_inst_cnt;
     std::function<std::string(void)> get_program;
+    std::function<std::string(void)> get_program_register_tags;
 
   } program_stats;
 
@@ -537,7 +542,7 @@ private:
     std::cout << "=======================================" << std::endl;
   }
 
-  ArgTypeDistribution CountArgTypes(const prog_org_gen_t & program) {
+  ArgTypeDistribution CountArgTypes(const program_t & program) {
     ArgTypeDistribution distribution;
     distribution.num_arg_instructions = 0;
     distribution.tag_arg_instructions = 0;
@@ -554,7 +559,7 @@ private:
     return distribution;
   }
 
-  size_t CountTagArgInstructions(const prog_org_gen_t & program) {
+  size_t CountTagArgInstructions(const program_t & program) {
     size_t cnt = 0;
     for (size_t i = 0; i < program.GetSize(); ++i) {
       bool has_tag_args = inst_lib->HasProperty(program[i].id, inst_prop_t::TAG_ARGS);
@@ -563,7 +568,7 @@ private:
     return cnt;
   }
 
-  size_t CountNumArgInstructions(const prog_org_gen_t & program) {
+  size_t CountNumArgInstructions(const program_t & program) {
     size_t cnt = 0;
     for (size_t i = 0; i < program.GetSize(); ++i) {
       bool has_num_args = inst_lib->HasProperty(program[i].id, inst_prop_t::NUM_ARGS);
@@ -572,7 +577,7 @@ private:
     return cnt;
   }
 
-  size_t CountNoArgInstructions(const prog_org_gen_t & program) {
+  size_t CountNoArgInstructions(const program_t & program) {
     size_t cnt = 0;
     for (size_t i = 0; i < program.GetSize(); ++i) {
       bool has_num_args = inst_lib->HasProperty(program[i].id, inst_prop_t::NUM_ARGS);
@@ -836,7 +841,7 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
       pop_arg_type_distribution.no_arg_instructions = 0;
       pop_arg_type_distribution.total_instructions = 0;
       for (size_t i = 0; i < prog_world->GetSize(); ++i) {
-        auto prog_distribution = CountArgTypes(prog_world->GetOrg(i).GetGenome());
+        auto prog_distribution = CountArgTypes(prog_world->GetOrg(i).GetGenome().program);
         pop_arg_type_distribution.num_arg_instructions += prog_distribution.num_arg_instructions;
         pop_arg_type_distribution.tag_arg_instructions += prog_distribution.tag_arg_instructions;
         pop_arg_type_distribution.no_arg_instructions += prog_distribution.no_arg_instructions;
@@ -847,6 +852,13 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
 
     prog_world->Update();
     prog_world->ClearCache();
+
+    // Print newly injected organism!
+    // for (size_t i = 0; i < prog_world->GetSize(); ++i) {
+    //   std::cout << "=== ORGANISM ID: " << i << " ===" << std::endl;
+    //   prog_world->GetOrg(i).PrettyPrintGenome();
+    // }
+
   });
 
   // Setup the virtual hardware
@@ -878,7 +890,7 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
   prog_world->SetFitFun([this](prog_org_t & prog_org) {
     double fitness = prog_org.GetPhenotype().total_score;
      if (prog_org.GetPhenotype().num_passes == TRAINING_SET_SIZE) { // Add 'smallness' bonus.
-      fitness += ((double)(MAX_PROG_SIZE - prog_org.GetGenome().GetSize()))/(double)MAX_PROG_SIZE;
+      fitness += ((double)(MAX_PROG_SIZE - prog_org.GetGenome().program.GetSize()))/(double)MAX_PROG_SIZE;
     }
     return fitness;
   });
@@ -988,8 +1000,14 @@ void ProgramSynthesisExperiment::SetupHardware() {
   // What do we do at the beginning of program evaluation?
   begin_program_eval.AddAction([this](prog_org_t & prog_org) {
     eval_hardware->Reset();
-    eval_hardware->SetProgram(prog_org.GetGenome());
+    eval_hardware->SetProgram(prog_org.GetGenome().program);
   });
+  // If registers are evolving, update evaluation hardware's tags!
+  if (MEM_TAG_EVOLVE) {
+    begin_program_eval.AddAction([this](prog_org_t & prog_org) {
+      eval_hardware->SetMemTags(prog_org.GetGenome().register_tags);
+    });
+  }
 
   // What should we do to the hardware after program evaluation?
   // - Currently, nothing.
@@ -1113,11 +1131,11 @@ void ProgramSynthesisExperiment::SetupEvaluation() {
       // At this point, this program has been evaluated on entire testing set.
       // If it passed all testing set test cases (and it's smaller than any solution
       // we've seen so far), we should check to see if its a solution.
-      if (pass_total == TRAINING_SET_SIZE && prog_org.GetGenome().GetSize() < smallest_prog_solution_size) {
+      if (pass_total == TRAINING_SET_SIZE && prog_org.GetGenome().program.GetSize() < smallest_prog_solution_size) {
         if (ScreenForSolution(prog_org)) { // todo - write screen for solution function
           if (!solution_found) { update_first_solution_found = prog_world->GetUpdate(); }
           solution_found = true;
-          smallest_prog_solution_size = prog_org.GetGenome().GetSize();
+          smallest_prog_solution_size = prog_org.GetGenome().program.GetSize();
           solution_file->Update();
         }
       }
@@ -1139,7 +1157,7 @@ void ProgramSynthesisExperiment::SetupSelection() {
   // Add pressure for small size.
   lexicase_prog_fit_set.push_back([this](prog_org_t & prog_org) {
     if (prog_org.GetPhenotype().num_passes == TRAINING_SET_SIZE) {
-      return (double)(MAX_PROG_SIZE - prog_org.GetGenome().GetSize());
+      return (double)(MAX_PROG_SIZE - prog_org.GetGenome().program.GetSize());
     }
     return 0.0;
   });
@@ -1153,6 +1171,9 @@ void ProgramSynthesisExperiment::SetupSelection() {
 }
 
 void ProgramSynthesisExperiment::SetupMutation() {
+
+  // Configure register tag mutator
+  reg_mutator.PER_BIT_FLIP = MEM_TAG_MUT__PER_BIT_FLIP;
 
   // Configure TagLGP mutator.
   prog_mutator.MAX_PROGRAM_LEN = MAX_PROG_SIZE;
@@ -1192,9 +1213,17 @@ void ProgramSynthesisExperiment::SetupMutation() {
   }
 
   // Configure world mutation function.
-  prog_world->SetMutFun([this](prog_org_t & prog_org, emp::Random & rnd) {
-    return prog_mutator.Mutate(rnd, prog_org.GetGenome());
-  });
+  if (MEM_TAG_EVOLVE) {
+    prog_world->SetMutFun([this](prog_org_t & prog_org, emp::Random & rnd) {
+      const size_t prog_muts = prog_mutator.Mutate(rnd, prog_org.GetGenome().program);
+      const size_t reg_muts = reg_mutator.Mutate(rnd, prog_org.GetGenome().register_tags);
+      return prog_muts + reg_muts;
+    });
+  } else {
+    prog_world->SetMutFun([this](prog_org_t & prog_org, emp::Random & rnd) {
+      return prog_mutator.Mutate(rnd, prog_org.GetGenome().program);
+    });
+  }
 
   // Set program world to auto mutate
   end_setup_sig.AddAction([this]() {
@@ -1238,16 +1267,32 @@ void ProgramSynthesisExperiment::SetupDataCollection() {
     scores += "]\"";
     return scores;
   };
-  program_stats.get_program_len = [this]() { return prog_world->GetOrg(eval_util.current_programID).GetGenome().GetSize(); };
+  program_stats.get_program_len = [this]() { return prog_world->GetOrg(eval_util.current_programID).GetGenome().program.GetSize(); };
   program_stats.get_program = [this]() {
     std::ostringstream stream;
-    prog_world->GetOrg(eval_util.current_programID).GetGenome().PrintCSVEntry(stream);
+    prog_world->GetOrg(eval_util.current_programID).GetGenome().program.PrintCSVEntry(stream);
+    return stream.str();
+  };
+  program_stats.get_program_register_tags = [this]() {
+    std::ostringstream stream;
+    stream << "\"";
+    if (MEM_TAG_EVOLVE) {
+      prog_world->GetOrg(eval_util.current_programID).GetGenome().PrintRegisterTags(stream);
+    } else {
+      stream << "[";
+      for (size_t i = 0; i < eval_hardware->GetMemTags().size(); ++i) {
+        if (i) stream << ",";
+        eval_hardware->GetMemTags()[i].Print(stream);
+      }
+      stream << "]";
+    }
+    stream << "\"";
     return stream.str();
   };
 
-  program_stats.get_tag_arg_inst_cnt = [this]() { return this->CountTagArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome()); };
-  program_stats.get_num_arg_inst_cnt = [this]() { return this->CountNumArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome()); };
-  program_stats.get_no_arg_inst_cnt = [this]() { return this->CountNoArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome()); };
+  program_stats.get_tag_arg_inst_cnt = [this]() { return this->CountTagArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome().program); };
+  program_stats.get_num_arg_inst_cnt = [this]() { return this->CountNumArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome().program); };
+  program_stats.get_no_arg_inst_cnt = [this]() { return this->CountNoArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome().program); };
 
   get_update = [this]() { return prog_world->GetUpdate(); };
 
@@ -1260,6 +1305,7 @@ void ProgramSynthesisExperiment::SetupDataCollection() {
   solution_file->AddFun(program_stats.get_no_arg_inst_cnt, "program_no_arg_inst_cnt");
   solution_file->AddFun(program_stats.get_program_len, "program_len");
   solution_file->AddFun(program_stats.get_program, "program");
+  solution_file->AddFun(program_stats.get_program_register_tags, "program_register_tags");
   solution_file->PrintHeaderKeys();
 
   // Setup program population argument distribution file
@@ -1305,6 +1351,8 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
   PROG_MUT__PER_MOD_DEL = config.PROG_MUT__PER_MOD_DEL();
 
   MEM_TAG_INIT_MODE = config.MEM_TAG_INIT_MODE();
+  MEM_TAG_EVOLVE = config.MEM_TAG_EVOLVE();
+  MEM_TAG_MUT__PER_BIT_FLIP = config.MEM_TAG_MUT__PER_BIT_FLIP();
   MIN_TAG_SPECIFICITY = config.MIN_TAG_SPECIFICITY();
   MAX_CALL_DEPTH = config.MAX_CALL_DEPTH();
 
@@ -1319,17 +1367,35 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
 void ProgramSynthesisExperiment::InitProgPop_Random() {
   std::cout << "Randomly initializing program population." << std::endl;
   for (size_t i = 0; i < PROG_POP_SIZE; ++i) {
+    emp::vector<tag_t> reg_tags;
+    if (MEM_TAG_EVOLVE) {
+      switch (MEM_TAG_INIT_MODE) {
+        case (size_t)TAG_MEMORY_INIT_MODE_TYPE::HADAMARD: {
+          reg_tags = GenHadamardMatrix<TAG_WIDTH>();
+          break;
+        }
+        case (size_t)TAG_MEMORY_INIT_MODE_TYPE::RANDOM: {
+          reg_tags = GenRandTags<TAG_WIDTH>(*random, MEM_SIZE, true);
+          break;
+        }
+        default: {
+          std::cout << "Unrecognized MEM_TAG_INIT_MODE (" << MEM_TAG_INIT_MODE << "). Exiting." << std::endl;
+          exit(-1);
+        }
+      }
+    }
+
     switch (PROGRAM_ARGUMENT_MODE) {
       case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::TAG_ONLY: {
-        prog_world->Inject(TagLGP::GenRandTagGPProgram(*random, inst_lib, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+        prog_world->Inject({TagLGP::GenRandTagGPProgram(*random, inst_lib, MIN_PROG_SIZE, MAX_PROG_SIZE), reg_tags}, 1);
         break;
       }
       case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::NUMERIC_ONLY: {
-        prog_world->Inject(TagLGP::GenRandTagGPProgram_NumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+        prog_world->Inject({TagLGP::GenRandTagGPProgram_NumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), reg_tags}, 1);
         break;
       }
       case (size_t)PROGRAM_ARGUMENT_MODE_TYPE::BOTH: {
-        prog_world->Inject(TagLGP::GenRandTagGPProgram_TagAndNumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), 1);
+        prog_world->Inject({TagLGP::GenRandTagGPProgram_TagAndNumArgs(*random, inst_lib, MEM_SIZE-1, MIN_PROG_SIZE, MAX_PROG_SIZE), reg_tags}, 1);
         break;
       }
       default: {
@@ -1337,6 +1403,11 @@ void ProgramSynthesisExperiment::InitProgPop_Random() {
         exit(-1);
       }
     }
+
+    // Print newly injected organism!
+    // std::cout << "=== ORGANISM ID: " << i << " ===" << std::endl;
+    // prog_world->GetOrg(i).PrettyPrintGenome();
+
   }
 }
 
@@ -1365,6 +1436,7 @@ void ProgramSynthesisExperiment::SnapshotPrograms() {
   file.AddFun(program_stats.get_no_arg_inst_cnt, "program_no_arg_inst_cnt");
   file.AddFun(program_stats.get_program_len, "program_len");
   file.AddFun(program_stats.get_program, "program");
+  file.AddFun(program_stats.get_program_register_tags, "program_register_tags");
 
   file.PrintHeaderKeys();
 

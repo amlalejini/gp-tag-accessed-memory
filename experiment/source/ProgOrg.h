@@ -11,15 +11,16 @@ template<size_t TAG_WIDTH>
 class ProgOrg {
 public:
   struct Phenotype;
+  struct Genome;
 
   using phenotype_t = Phenotype;
-  using genome_t = typename TagLGP::TagLinearGP_TW<TAG_WIDTH>::Program;
+  using genome_t = Genome;
 
   struct Phenotype {
     // emp::vector<double> test_results;
     emp::vector<double> test_scores;
     double total_score;
-    
+
     emp::vector<bool> test_passes;
     size_t num_passes;
     size_t num_fails;
@@ -33,7 +34,7 @@ public:
       test_scores.clear();
       test_scores.resize(s, 0);
       total_score = 0;
-      
+
       test_passes.clear();
       test_passes.resize(s, false);
       num_passes = 0;
@@ -61,6 +62,28 @@ public:
 
   };
 
+  struct Genome {
+    using program_t = typename TagLGP::TagLinearGP_TW<TAG_WIDTH>::Program;
+    using tag_t = typename TagLGP::TagLinearGP_TW<TAG_WIDTH>::tag_t;
+
+    program_t program;
+    emp::vector<tag_t> register_tags;
+
+    Genome(const program_t & p, const emp::vector<tag_t> & reg_tags=emp::vector<tag_t>())
+      : program(p), register_tags(reg_tags) { ; }
+    Genome(const Genome &) = default;
+    Genome(Genome &&) = default;
+
+    void PrintRegisterTags(std::ostream & os=std::cout) {
+      os << "[";
+      for (size_t i = 0; i < register_tags.size(); ++i) {
+        if (i) os << ",";
+        register_tags[i].Print(os);
+      }
+      os << "]";
+    }
+  };
+
 protected:
 
   phenotype_t phenotype;
@@ -68,7 +91,7 @@ protected:
 
 public:
 
-  ProgOrg(const genome_t & _g) 
+  ProgOrg(const genome_t & _g)
     : phenotype(), genome(_g) { ; }
 
   ProgOrg(const ProgOrg &) = default;
@@ -82,9 +105,15 @@ public:
 
   void SetGenome(const genome_t & in) { genome = in; }
 
-  // Todo: randomize genome
 
-  // Todo: print linear (print such that program can be put on single line)
+  void PrettyPrintGenome(std::ostream & os=std::cout) {
+    os << "Register tags: ";
+    genome.PrintRegisterTags(os);
+    os << "\n";
+    os << "Program: ";
+    genome.program.PrintCSVEntry(os);
+    os << "\n";
+  }
 };
 
 #endif
