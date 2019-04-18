@@ -14,7 +14,8 @@ arg_types = {
     "ARGS_NUM_ONLY": "Numeric",
     "ARGS_NUM": "Numeric",
     "ARGS_TAG_ONLY": "Tag-based",
-    "ARGS_TAG_BF": "Tag-BitFlips"
+    "ARGS_TAG_BF": "Tag-BitFlips",
+    "ARGS_TAG": "Tag"
 }
 
 mut_rates = {
@@ -29,8 +30,26 @@ mut_rates = {
     "MUT_025": "0.025",
     "MUT_0075": "0.0075",
     "MUT_005": "0.005",
-    "MUT_0025": "0.0025"
+    "MUT_0025": "0.0025",
+    "TAG_BF_0005": "0.0005",
+    "TAG_BF_001": "0.001",
+    "TAG_BF_002": "0.002",
+    "TAG_BF_005": "0.005",
+    "TAG_BF_01": "0.01",
+    "TAG_BF_02": "0.02",
+    "TAG_BF_05": "0.05"
 }
+
+tag_rand_rates = {
+    "TAG_RAND_0005": "0.0005",
+    "TAG_RAND_001": "0.001",
+    "TAG_RAND_002": "0.002",
+    "TAG_RAND_005": "0.005",
+    "TAG_RAND_01": "0.01",
+    "TAG_RAND_02": "0.02",
+    "TAG_RAND_05": "0.05"
+}
+
 
 def mkdir_p(path):
     """
@@ -66,7 +85,7 @@ def main():
         update = args.update
         print("Looking for best solutions from update {} or earlier.".format(update))
 
-        solutions_content = "treatment,run_id,problem,arg_type,arg_mut_rate,mem_searching,solution_found,solution_length,update_found,update_first_solution_found,program\n"
+        solutions_content = "treatment,run_id,problem,arg_type,arg_mut_rate,tag_rand_rate,mem_searching,solution_found,solution_length,update_found,update_first_solution_found,program\n"
 
         for run in runs:
             print("Run: {}".format(run))
@@ -91,6 +110,13 @@ def main():
             if arg_mut_rate == None:
                 print("Unrecognized arg mut rate! Exiting.")
                 exit()
+
+            tag_rand_rate = None
+            for thing in tag_rand_rates:
+                if thing in treatment: tag_rand_rate = tag_rand_rates[thing]
+            if tag_rand_rate == None:
+                tag_rand_rate = "NONE"
+                print("Failed to figure out tag randomization rate!")
 
             run_log_fpath = os.path.join(run_dir, "run.log")
             with open(run_log_fpath, "r") as logfp:
@@ -140,7 +166,7 @@ def main():
                 update_found = "NONE"
                 program = "NONE"
             # "treatment,run_id,problem,uses_cohorts,solution_found,solution_length,update_found,program\n"
-            solutions_content += ",".join(map(str,[treatment, run_id, problem, arg_type, arg_mut_rate, mem_searching, sol_found, program_len, update_found, update_first_sol, '"{}"'.format(program)])) + "\n"
+            solutions_content += ",".join(map(str,[treatment, run_id, problem, arg_type, arg_mut_rate, tag_rand_rate, mem_searching, sol_found, program_len, update_found, update_first_sol, '"{}"'.format(program)])) + "\n"
         with open(os.path.join(dump, "min_programs__update_{}.csv".format(update)), "w") as fp:
             fp.write(solutions_content)
 
