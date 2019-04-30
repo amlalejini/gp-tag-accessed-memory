@@ -2,7 +2,7 @@
 ########## Define Resources Needed with SBATCH Lines ##########
 
 #SBATCH --time=6:00:00            # limit of wall clock time - how long the job will run (same as -t)
-#SBATCH --array=200
+#SBATCH --array=1-200
 #SBATCH --mem=4G                    # memory required per node - amount of memory (in bytes)
 #SBATCH --job-name rtags-grd         # you can give your job a name for easier identification (same as -J)
 #SBATCH --account=devolab
