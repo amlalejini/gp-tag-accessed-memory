@@ -21,26 +21,28 @@ info_by_treatment = {}
 for sol in solutions:
     treatment = sol[header_lu["treatment"]]
     if not treatment in info_by_treatment:
-        info_by_treatment[treatment] = {"solutions_found":0, "total_runs":0, "min_solution_length":"NONE"}
+        info_by_treatment[treatment] = {"solutions_found":0, "total_runs":0}
     if (sol[header_lu["solution_found"]] == "True"):
         info_by_treatment[treatment]["solutions_found"] += 1
-        if info_by_treatment[treatment]["min_solution_length"] == "NONE":
-            info_by_treatment[treatment]["min_solution_length"] = sol[header_lu["solution_length"]]
-        elif int(info_by_treatment[treatment]["min_solution_length"]) > int(sol[header_lu["solution_length"]]):
-            info_by_treatment[treatment]["min_solution_length"] = sol[header_lu["solution_length"]]
 
     info_by_treatment[treatment]["total_runs"] += 1
     info_by_treatment[treatment]["problem"] = sol[header_lu["problem"]]
     info_by_treatment[treatment]["arg_type"] = sol[header_lu["arg_type"]]
-    info_by_treatment[treatment]["arg_mut_rate"] = sol[header_lu["arg_mut_rate"]]
-    info_by_treatment[treatment]["tag_rand_rate"] = sol[header_lu["tag_rand_rate"]]
+    info_by_treatment[treatment]["num_arg_mut_rate"] = sol[header_lu["num_arg_mut_rate"]]
+    info_by_treatment[treatment]["arg_tag_bf_mut_rate"] = sol[header_lu["arg_tag_bf_mut_rate"]]
+    info_by_treatment[treatment]["arg_tag_rand_rate"] = sol[header_lu["arg_tag_rand_rate"]]
     info_by_treatment[treatment]["mem_searching"] = sol[header_lu["mem_searching"]]
+    info_by_treatment[treatment]["register_tags_init"] = sol[header_lu["register_tags_init"]]
+    info_by_treatment[treatment]["register_tags_evolve"] = sol[header_lu["register_tags_evolve"]]
+    info_by_treatment[treatment]["register_capacity_evolve"] = sol[header_lu["register_capacity_evolve"]]
+    info_by_treatment[treatment]["register_duplication_rate"] = sol[header_lu["register_duplication_rate"]]
+    info_by_treatment[treatment]["register_deletion_rate"] = sol[header_lu["register_deletion_rate"]]
 
-solutions_summary = "treatment,problem,arg_type,arg_mut_rate,tag_rand_rate,mem_searching,solutions_found,total_runs,min_solution_size\n"
+solutions_summary = "treatment,problem,arg_type,num_arg_mut_rate,arg_tag_bf_mut_rate,arg_tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solutions_found,total_runs\n"
 for treatment in info_by_treatment:
     info = info_by_treatment[treatment]
     print(treatment)
-    solutions_summary += ",".join(map(str, [treatment, info["problem"], info["arg_type"], info["tag_rand_rate"], info["arg_mut_rate"], info["mem_searching"], info["solutions_found"], info["total_runs"], info["min_solution_length"]])) + "\n"
+    solutions_summary += ",".join(map(str, [treatment,info["problem"],info["arg_type"],info["num_arg_mut_rate"],info["arg_tag_bf_mut_rate"],info["arg_tag_rand_rate"],info["mem_searching"],info["register_tags_init"],info["register_tags_evolve"],info["register_capacity_evolve"],info["register_duplication_rate"],info["register_deletion_rate"],info["solutions_found"],info["total_runs"]])) + "\n"
 
 new_name = fpath.split("/")[-1].strip(".csv") + "__solutions_summary.csv"
 with open(new_name, "w") as fp:
