@@ -43,7 +43,7 @@ def main():
         update = args.update
         print("Looking for best solutions from update {} or earlier.".format(update))
 
-        solutions_content = "treatment,run_id,problem,arg_type,num_arg_mut_rate,tag_bf_mut_rate,tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solution_found,solution_length,update_found,update_first_solution_found,program,program_register_cnt,program_register_tags\n"
+        solutions_content = "treatment,run_id,problem,arg_type,num_arg_mut_rate,arg_tag_bf_mut_rate,arg_tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solution_found,solution_length,update_found,update_first_solution_found,program,program_register_cnt,program_register_tags\n"
 
         for run in runs:
             print("Run: {}".format(run))
@@ -64,88 +64,78 @@ def main():
                 if line[:3] == "set":
                     line = line.split(" ")
                     run_settings[line[1]] = line[2]
-
-            print(run_settings)
-            exit()
-
-
-
+            # Extract relevant run settings!
             # problem,
-            # arg_type,num_arg_mut_rate,tag_bf_mut_rate,tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solution_found,solution_length,update_found,update_first_solution_found,program,program_register_cnt,program_register_tags
+            problem = run_settings["PROBLEM"]
 
+            # arg_type,
+            arg_type = "UNKNOWN"
+            if run_settings["PROGRAM_ARGUMENT_MODE"] == "0":
+                arg_type = "TAG"
+            elif run_settings["PROGRAM_ARGUMENT_MODE"] == "1":
+                arg_type = "NUMERIC"
+            elif run_settings["PROGRAM_ARGUMENT_MODE"] == "2":
+                arg_type = "BOTH"
 
-        #     problem = run.strip("PROBLEM_").split("__")[0]
+            # num_arg_mut_rate,
+            num_arg_mut_rate = run_settings["PROG_MUT__PER_NUMERIC_ARG_SUB"]
 
-        #     arg_type = None
-        #     for thing in arg_types:
-        #         if thing in treatment: arg_type = arg_types[thing]
-        #     if arg_type == None:
-        #         print("Unrecognized arg type! Exiting.")
-        #         exit()
+            # arg_tag_bf_mut_rate,
+            arg_tag_bf_mut_rate = run_settings["PROG_MUT__PER_BIT_FLIP"]
 
-        #     arg_mut_rate = None
-        #     for thing in mut_rates:
-        #         if thing in treatment: arg_mut_rate = mut_rates[thing]
-        #     if arg_mut_rate == None:
-        #         print("Unrecognized arg mut rate! Exiting.")
-        #         exit()
+            # arg_tag_rand_rate,
+            arg_tag_rand_rate = run_settings["PROG_MUT__PER_TAG_RANDOMIZE"]
 
-        #     tag_rand_rate = None
-        #     for thing in tag_rand_rates:
-        #         if thing in treatment: tag_rand_rate = tag_rand_rates[thing]
-        #     if tag_rand_rate == None:
-        #         tag_rand_rate = "NONE"
-        #         print("Failed to figure out tag randomization rate!")
+            # mem_searching,
+            mem_searching = run_settings["PROGRAM_ARGUMENTS_TYPE_SEARCH"]
 
+            # register_tags_init
+            register_tags_init = "UNKNOWN"
+            if run_settings["MEM_TAG_INIT_MODE"] == "0":
+                register_tags_init = "hadamard"
+            elif run_settings["MEM_TAG_INIT_MODE"] == "1":
+                register_tags_init = "random"
 
+            # register_tags_evolve,
+            register_tags_evolve = run_settings["MEM_TAG_EVOLVE"]
 
-        #     mem_searching = None
-        #     if "set PROGRAM_ARGUMENTS_TYPE_SEARCH 0" in log_content:
-        #         mem_searching = "0"
-        #     else:
-        #         mem_searching = "1"
+            # register_capacity_evolve,
+            register_capacity_evolve = run_settings["MEM_CAPACITY_EVOLVE"]
 
-        #     file_content = None
-        #     with open(run_sols, "r") as fp:
-        #         file_content = fp.read().strip().split("\n")
+            # register_duplication_rate,
+            register_duplication_rate = run_settings["MEM_TAG_MUT__PER_TAG_DUP"]
 
-        #     header = file_content[0].split(",")
-        #     header_lu = {header[i].strip():i for i in range(0, len(header))}
-        #     file_content = file_content[1:]
+            # register_deletion_rate,
+            register_deletion_rate = run_settings["MEM_TAG_MUT__PER_TAG_DEL"]
 
-        #     solutions = [l for l in csv.reader(file_content, quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)]
-        #     # Add smallest solution to smallest solution doc
-        #     min_program = None
-        #     sol_found = False
-        #     if len(solutions) > 0:
-        #         # Find the smallest program
-        #         for i in range(0, len(solutions)):
-        #             sol_update = int(solutions[i][header_lu["update"]])
-        #             if sol_update > update: continue
-        #             if min_program == None:
-        #                 min_program = i
-        #                 sol_found = True
-        #             elif float(solutions[i][header_lu["program_len"]]) < float(solutions[min_program][header_lu["program_len"]]):
-        #                 min_program = i
-        #                 sol_found = True
+            # Extract solution information
 
-        #     if sol_found:
-        #         # Record timing info about first solution
-        #         update_first_sol = solutions[0][header_lu["update"]]
-        #         # Record info about smallest solution
-        #         min_sol = solutions[min_program]
-        #         program_len = min_sol[header_lu["program_len"]]
-        #         update_found = min_sol[header_lu["update"]]
-        #         program = min_sol[header_lu["program"]]
-        #     else:
-        #         update_first_sol = "NONE"
-        #         program_len = "NONE"
-        #         update_found = "NONE"
-        #         program = "NONE"
-        #     # "treatment,run_id,problem,uses_cohorts,solution_found,solution_length,update_found,program\n"
-        #     solutions_content += ",".join(map(str,[treatment, run_id, problem, arg_type, arg_mut_rate, tag_rand_rate, mem_searching, sol_found, program_len, update_found, update_first_sol, '"{}"'.format(program)])) + "\n"
-        # with open(os.path.join(dump, "min_programs__update_{}.csv".format(update)), "w") as fp:
-        #     fp.write(solutions_content)
+            file_content = None
+            with open(run_sols, "r") as fp:
+                file_content = fp.read().strip().split("\n")
+            header = file_content[0].split(",")
+            header_lu = {header[i].strip():i for i in range(0, len(header))}
+            file_content = file_content[1:]
+            solutions = [l for l in csv.reader(file_content, quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)]
+            # Add smallest solution to smallest solution doc
+            solution_found = False
+            update_first_solution_found = "NONE"
+            solution_length = "NONE"
+            program = "NONE"
+            program_register_cnt = "NONE"
+            program_register_tags = "NONE"
+            if len(solutions) > 0:
+                solution_found = True
+                update_first_solution_found = solutions[0][header_lu["update"]]
+                solution_length = solutions[0][header_lu["program_len"]]
+                program = solutions[0][header_lu["program"]]
+                program_register_cnt = solutions[0][header_lu["program_register_cnt"]]
+                program_register_tags = solutions[0][header_lu["program_register_tags"]]
+
+            #"treatment,run_id,problem,arg_type,num_arg_mut_rate,arg_tag_bf_mut_rate,arg_tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solution_found,solution_length,update_found,update_first_solution_found,program,program_register_cnt,program_register_tags\n"
+            solutions_content += ",".join(map(str,[treatment,run_id,problem,arg_type,num_arg_mut_rate,arg_tag_bf_mut_rate,arg_tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solution_found,solution_length,solution_found,update_first_solution_found,'"{}"'.format(program),program_register_cnt,'"{}"'.format(program_register_tags)])) + "\n"
+        with open(os.path.join(dump, "solutions__update_{}.csv".format(update)), "w") as fp:
+            fp.write(solutions_content)
 
 if __name__ == "__main__":
     main()
