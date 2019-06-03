@@ -15,9 +15,35 @@ struct TagMutator {
   using tag_t = typename hardware_t::tag_t;
 
   double PER_BIT_FLIP;
+  double PER_TAG_DELETE=0.0;
+  double PER_TAG_DUPLICATE=0.0;
+  size_t MAX_TAG_CNT=16;
+  size_t MIN_TAG_CNT=1;
 
   size_t Mutate(emp::Random & rnd, emp::vector<tag_t> & tags) {
     size_t mut_cnt = 0;
+    // Dups and dels!
+    if (PER_TAG_DELETE > 0.0 || PER_TAG_DUPLICATE > 0.0) {
+      emp::vector<tag_t> new_tags;
+      size_t expected_cnt = tags.size();
+      for (size_t i = 0; i < tags.size(); ++i) {
+        // delete?
+        if (rnd.P(PER_TAG_DELETE) && expected_cnt > MIN_TAG_CNT) {
+          --expected_cnt;
+          ++mut_cnt;
+        } else {
+          new_tags.emplace_back(tags[i]); // If we're not deleting this tag, add it to the new tag set
+        }
+        // duplicate?
+        if (rnd.P(PER_TAG_DUPLICATE) && expected_cnt < MAX_TAG_CNT) {
+          ++expected_cnt;
+          ++mut_cnt;
+          new_tags.emplace_back(tags[i]);
+        }
+      }
+      tags = new_tags;
+    }
+    // bit substitutions
     for (size_t i = 0; i < tags.size(); ++i) {
       tag_t & tag = tags[i];
       for (size_t k = 0; k < tag.GetSize(); ++k) {

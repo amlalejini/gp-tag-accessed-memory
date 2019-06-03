@@ -33,6 +33,8 @@ EMP_BUILD_CONFIG(ProgramSynthesisConfig,
   VALUE(MEM_TAG_EVOLVE, bool, false, "Should memory tags co-evolve with programs?"),
   VALUE(MEM_CAPACITY_EVOLVE, bool, false, "Should the _number of memory locations also evolve?"),
   VALUE(MEM_TAG_MUT__PER_BIT_FLIP, double, 0.001, "Register tag per-bit flip rate (only relevant in register tag evo mode)."),
+  VALUE(MEM_TAG_MUT__PER_TAG_DUP, double, 0.0, "Duplicate tag?"),
+  VALUE(MEM_TAG_MUT__PER_TAG_DEL, double, 0.0, "Delete a tag?"),
   VALUE(MIN_TAG_SPECIFICITY, double, 0.0, "What is the minimum tag similarity required for a tag to successfully reference another tag?"),
   VALUE(MAX_CALL_DEPTH, size_t, 128, "Maximum depth of hardware's call stack."),
 

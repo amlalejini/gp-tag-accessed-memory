@@ -249,6 +249,8 @@ private:
   bool MEM_TAG_EVOLVE;
   bool MEM_CAPACITY_EVOLVE;
   double MEM_TAG_MUT__PER_BIT_FLIP;
+  double MEM_TAG_MUT__PER_TAG_DEL;
+  double MEM_TAG_MUT__PER_TAG_DUP;
   double MIN_TAG_SPECIFICITY;
   size_t MAX_CALL_DEPTH;
 
@@ -836,9 +838,9 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
     std::cout << "solution found? " << solution_found << "; ";
     std::cout << "smallest solution? " << smallest_prog_solution_size << std::endl;
 
-    if (update % SNAPSHOT_INTERVAL == 0 || update == GENERATIONS) do_pop_snapshot_sig.Trigger();
+    if (update % SNAPSHOT_INTERVAL == 0 || update == GENERATIONS || solution_found) do_pop_snapshot_sig.Trigger();
 
-    if (update % SUMMARY_STATS_INTERVAL == 0 || update == GENERATIONS) {
+    if (update % SUMMARY_STATS_INTERVAL == 0 || update == GENERATIONS || solution_found) {
       // Update population argument type distribution
       pop_arg_type_distribution.num_arg_instructions = 0;
       pop_arg_type_distribution.tag_arg_instructions = 0;
@@ -857,12 +859,13 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
     prog_world->Update();
     prog_world->ClearCache();
 
+    if (solution_found) { std::cout << "SOLUTION FOUND! Exiting!" << std::endl; exit(0); }
+
     // Print newly injected organism!
     // for (size_t i = 0; i < prog_world->GetSize(); ++i) {
     //   std::cout << "=== ORGANISM ID: " << i << " ===" << std::endl;
     //   prog_world->GetOrg(i).PrettyPrintGenome();
     // }
-
   });
 
   // Setup the virtual hardware
@@ -873,6 +876,7 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
   // we setup depends on experiment configuration.
   std::cout << "==== EXPERIMENT SETUP => problem ====" << std::endl;
   SetupProblem();
+  std::cout << "Minimum num of registers = " << MIN_MEM_SIZE << std::endl;
   // Setup default instruction set.
   AddDefaultInstructions();
   PrintInstructionSet();
@@ -893,9 +897,9 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
   std::cout << "==== EXPERIMENT SETUP => world fitness function (not used by lexicase selection) ====" << std::endl;
   prog_world->SetFitFun([this](prog_org_t & prog_org) {
     double fitness = prog_org.GetPhenotype().total_score;
-     if (prog_org.GetPhenotype().num_passes == TRAINING_SET_SIZE) { // Add 'smallness' bonus.
-      fitness += ((double)(MAX_PROG_SIZE - prog_org.GetGenome().program.GetSize()))/(double)MAX_PROG_SIZE;
-    }
+    //  if (prog_org.GetPhenotype().num_passes == TRAINING_SET_SIZE) { // Add 'smallness' bonus.
+    //   fitness += ((double)(MAX_PROG_SIZE - prog_org.GetGenome().program.GetSize()))/(double)MAX_PROG_SIZE;
+    // }
     return fitness;
   });
 
@@ -1164,12 +1168,12 @@ void ProgramSynthesisExperiment::SetupSelection() {
     });
   }
   // Add pressure for small size.
-  lexicase_prog_fit_set.push_back([this](prog_org_t & prog_org) {
-    if (prog_org.GetPhenotype().num_passes == TRAINING_SET_SIZE) {
-      return (double)(MAX_PROG_SIZE - prog_org.GetGenome().program.GetSize());
-    }
-    return 0.0;
-  });
+  // lexicase_prog_fit_set.push_back([this](prog_org_t & prog_org) {
+  //   if (prog_org.GetPhenotype().num_passes == TRAINING_SET_SIZE) {
+  //     return (double)(MAX_PROG_SIZE - prog_org.GetGenome().program.GetSize());
+  //   }
+  //   return 0.0;
+  // });
   // Configure do selection signal.
   do_selection_sig.AddAction([this]() {
     emp::LexicaseSelect_NAIVE(*prog_world,
@@ -1183,6 +1187,10 @@ void ProgramSynthesisExperiment::SetupMutation() {
 
   // Configure register tag mutator
   reg_mutator.PER_BIT_FLIP = MEM_TAG_MUT__PER_BIT_FLIP;
+  reg_mutator.PER_TAG_DELETE = MEM_TAG_MUT__PER_TAG_DEL;
+  reg_mutator.PER_TAG_DUPLICATE = MEM_TAG_MUT__PER_TAG_DUP;
+  reg_mutator.MAX_TAG_CNT = MAX_MEM_SIZE;
+  reg_mutator.MIN_TAG_CNT = MIN_MEM_SIZE;
 
   // Configure TagLGP mutator.
   prog_mutator.MAX_PROGRAM_LEN = MAX_PROG_SIZE;
@@ -1363,6 +1371,8 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
   MEM_TAG_EVOLVE = config.MEM_TAG_EVOLVE();
   MEM_CAPACITY_EVOLVE = config.MEM_CAPACITY_EVOLVE();
   MEM_TAG_MUT__PER_BIT_FLIP = config.MEM_TAG_MUT__PER_BIT_FLIP();
+  MEM_TAG_MUT__PER_TAG_DEL = config.MEM_TAG_MUT__PER_TAG_DEL();
+  MEM_TAG_MUT__PER_TAG_DUP = config.MEM_TAG_MUT__PER_TAG_DUP();
   MIN_TAG_SPECIFICITY = config.MIN_TAG_SPECIFICITY();
   MAX_CALL_DEPTH = config.MAX_CALL_DEPTH();
 
@@ -1398,8 +1408,7 @@ void ProgramSynthesisExperiment::InitProgPop_Random() {
 
     // if we're evolving capacity, generate a random memory capacity
     if (MEM_CAPACITY_EVOLVE) {
-      std::cout << "ADJUST MEM CAPACITY" << std::endl;
-      reg_tags.resize(random->GetUInt(1, MAX_MEM_SIZE+1));
+      reg_tags.resize(random->GetUInt(MIN_MEM_SIZE, MAX_MEM_SIZE+1));
     }
 
     switch (PROGRAM_ARGUMENT_MODE) {
@@ -1952,6 +1961,7 @@ void ProgramSynthesisExperiment::SetupProblem_NumberIO() {
   TESTING_SET_SIZE = prob_utils_NumberIO.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
   std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+  MIN_MEM_SIZE = 2;
 
   // Tell experiment how to configure hardware inputs when running a program against a test.
   begin_program_test.AddAction([this](prog_org_t & prog_org) {
@@ -2061,6 +2071,7 @@ void ProgramSynthesisExperiment::SetupProblem_SmallOrLarge() {
 
   USES_VECTOR_INSTRUCTIONS = false;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=1;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -2148,6 +2159,7 @@ void ProgramSynthesisExperiment::SetupProblem_ForLoopIndex() {
 
   USES_VECTOR_INSTRUCTIONS = false;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=3;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -2271,6 +2283,7 @@ void ProgramSynthesisExperiment::SetupProblem_CompareStringLengths() {
 
   USES_VECTOR_INSTRUCTIONS = false;
   USES_STRING_INSTRUCTIONS = true;
+  MIN_MEM_SIZE=3;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -2429,6 +2442,7 @@ void ProgramSynthesisExperiment::SetupProblem_StringLengthsBackwards() {
 
   USES_VECTOR_INSTRUCTIONS = true;
   USES_STRING_INSTRUCTIONS = true;
+  MIN_MEM_SIZE=1;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -2447,7 +2461,7 @@ void ProgramSynthesisExperiment::SetupProblem_StringLengthsBackwards() {
     // std::cout << "TRAINING? " << eval_util.use_training_set << "(" << eval_util.current_testID << ")" << std::endl;
     // Reset evaluation utilities.
     prob_utils_StringLengthsBackwards.ResetTestEval();
-    emp_assert(eval_hardware->GetMemSize() >= 3);
+    emp_assert(eval_hardware->GetMemSize() >= 1);
     // Configure inputs.
     if (eval_hardware->GetCallStackSize()) {
 
@@ -2544,6 +2558,7 @@ void ProgramSynthesisExperiment::SetupProblem_LastIndexOfZero() {
 
   USES_VECTOR_INSTRUCTIONS = true;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=1;
 
   prob_utils_LastIndexOfZero.MAX_ERROR = PROB_LAST_INDEX_OF_ZERO__MAX_VEC_LEN;
 
@@ -2671,12 +2686,13 @@ void ProgramSynthesisExperiment::SetupProblem_MirrorImage() {
   TESTING_SET_SIZE = prob_utils_MirrorImage.GetTestingSet().GetSize();
   std::cout << "Loaded TRAINING set size = " << TRAINING_SET_SIZE << std::endl;
   std::cout << "Loaded TESTING set size  = " << TESTING_SET_SIZE << std::endl;
+  MIN_MEM_SIZE=2;
 
   // Tell experiment how to configure hardware inputs when running a program against a test.
   begin_program_test.AddAction([this](prog_org_t & prog_org) {
     // Reset evaluation utilities.
     prob_utils_MirrorImage.ResetTestEval();
-    emp_assert(eval_hardware->GetMemSize() >= 1);
+    emp_assert(eval_hardware->GetMemSize() >= 2);
     // Configure inputs.
     if (eval_hardware->GetCallStackSize()) {
 
@@ -2780,6 +2796,7 @@ void ProgramSynthesisExperiment::SetupProblem_SumOfSquares() {
 
   USES_VECTOR_INSTRUCTIONS = false;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=1;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -2864,6 +2881,7 @@ void ProgramSynthesisExperiment::SetupProblem_VectorsSummed() {
 
   USES_VECTOR_INSTRUCTIONS = true;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=2;
 
   prob_utils_VectorsSummed.MAX_NUM = PROB_VECTORS_SUMMED__MAX_NUM;
 
@@ -2883,7 +2901,7 @@ void ProgramSynthesisExperiment::SetupProblem_VectorsSummed() {
     // Reset evaluation utilities.
     prob_utils_VectorsSummed.ResetTestEval();
     prob_utils_VectorsSummed.MAX_ERROR = (2*PROB_VECTORS_SUMMED__MAX_NUM) * prob_utils_VectorsSummed.GetTestOutput(eval_util.use_training_set, eval_util.current_testID).size();
-    emp_assert(eval_hardware->GetMemSize() >= 1);
+    emp_assert(eval_hardware->GetMemSize() >= 2);
     // Configure inputs.
     if (eval_hardware->GetCallStackSize()) {
 
@@ -3007,6 +3025,7 @@ void ProgramSynthesisExperiment::SetupProblem_Grade() {
 
   USES_VECTOR_INSTRUCTIONS = false;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=5;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -3023,7 +3042,7 @@ void ProgramSynthesisExperiment::SetupProblem_Grade() {
   begin_program_test.AddAction([this](prog_org_t & prog_org) {
     // Reset evaluation utilities.
     prob_utils_Grade.ResetTestEval();
-    emp_assert(eval_hardware->GetMemSize() >= 1);
+    emp_assert(eval_hardware->GetMemSize() >= 5);
     // Configure inputs.
     if (eval_hardware->GetCallStackSize()) {
 
@@ -3117,6 +3136,7 @@ void ProgramSynthesisExperiment::SetupProblem_Median() {
 
   USES_VECTOR_INSTRUCTIONS = false;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=3;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -3133,7 +3153,7 @@ void ProgramSynthesisExperiment::SetupProblem_Median() {
   begin_program_test.AddAction([this](prog_org_t & prog_org) {
     // Reset evaluation utilities.
     prob_utils_Median.ResetTestEval();
-    emp_assert(eval_hardware->GetMemSize() >= 1);
+    emp_assert(eval_hardware->GetMemSize() >= 3, eval_hardware->GetMemSize(), MIN_MEM_SIZE);
     // Configure inputs.
     if (eval_hardware->GetCallStackSize()) {
 
@@ -3239,6 +3259,7 @@ void ProgramSynthesisExperiment::SetupProblem_Smallest() {
 
   USES_VECTOR_INSTRUCTIONS = false;
   USES_STRING_INSTRUCTIONS = false;
+  MIN_MEM_SIZE=4;
 
   // Load training and testing examples from file.
   if (BENCHMARK_DATA_DIR.back() != '/') BENCHMARK_DATA_DIR += '/';
@@ -3255,7 +3276,7 @@ void ProgramSynthesisExperiment::SetupProblem_Smallest() {
   begin_program_test.AddAction([this](prog_org_t & prog_org) {
     // Reset evaluation utilities.
     prob_utils_Smallest.ResetTestEval();
-    emp_assert(eval_hardware->GetMemSize() >= 1);
+    emp_assert(eval_hardware->GetMemSize() >= 4);
     // Configure inputs.
     if (eval_hardware->GetCallStackSize()) {
 
