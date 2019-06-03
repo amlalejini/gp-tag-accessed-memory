@@ -429,6 +429,7 @@ private:
     std::function<size_t(void)> get_no_arg_inst_cnt;
     std::function<std::string(void)> get_program;
     std::function<std::string(void)> get_program_register_tags;
+    std::function<size_t(void)> get_program_register_cnt;
 
   } program_stats;
 
@@ -859,7 +860,7 @@ void ProgramSynthesisExperiment::Setup(const ProgramSynthesisConfig & config) {
     prog_world->Update();
     prog_world->ClearCache();
 
-    if (solution_found) { std::cout << "SOLUTION FOUND! Exiting!" << std::endl; exit(0); }
+    // if (solution_found) { std::cout << "SOLUTION FOUND! Exiting!" << std::endl; exit(0); }
 
     // Print newly injected organism!
     // for (size_t i = 0; i < prog_world->GetSize(); ++i) {
@@ -957,6 +958,7 @@ void ProgramSynthesisExperiment::Run() {
   // For each generation, advance 'time' by one step.
   for (update = 0; update <= GENERATIONS; ++update) {
     RunStep();
+    if (solution_found) { std::cout << "SOLUTION FOUND! Exiting!" << std::endl; break; }
   }
 }
 
@@ -1306,6 +1308,9 @@ void ProgramSynthesisExperiment::SetupDataCollection() {
     stream << "\"";
     return stream.str();
   };
+  program_stats.get_program_register_cnt = [this]() {
+    return prog_world->GetOrg(eval_util.current_programID).GetGenome().register_tags.size();
+  };
 
   program_stats.get_tag_arg_inst_cnt = [this]() { return this->CountTagArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome().program); };
   program_stats.get_num_arg_inst_cnt = [this]() { return this->CountNumArgInstructions(prog_world->GetOrg(eval_util.current_programID).GetGenome().program); };
@@ -1322,6 +1327,7 @@ void ProgramSynthesisExperiment::SetupDataCollection() {
   solution_file->AddFun(program_stats.get_no_arg_inst_cnt, "program_no_arg_inst_cnt");
   solution_file->AddFun(program_stats.get_program_len, "program_len");
   solution_file->AddFun(program_stats.get_program, "program");
+  solution_file->AddFun(program_stats.get_program_register_cnt, "program_register_cnt");
   solution_file->AddFun(program_stats.get_program_register_tags, "program_register_tags");
   solution_file->PrintHeaderKeys();
 
@@ -1462,8 +1468,8 @@ void ProgramSynthesisExperiment::SnapshotPrograms() {
   file.AddFun(program_stats.get_no_arg_inst_cnt, "program_no_arg_inst_cnt");
   file.AddFun(program_stats.get_program_len, "program_len");
   file.AddFun(program_stats.get_program, "program");
+  file.AddFun(program_stats.get_program_register_cnt, "program_register_cnt");
   file.AddFun(program_stats.get_program_register_tags, "program_register_tags");
-
   file.PrintHeaderKeys();
 
   // For each program in the population, dump the program and anything we want to know about it.
