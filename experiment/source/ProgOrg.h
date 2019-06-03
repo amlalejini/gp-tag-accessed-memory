@@ -105,7 +105,6 @@ public:
 
   void SetGenome(const genome_t & in) { genome = in; }
 
-
   void PrettyPrintGenome(std::ostream & os=std::cout) {
     os << "Register tags: ";
     genome.PrintRegisterTags(os);

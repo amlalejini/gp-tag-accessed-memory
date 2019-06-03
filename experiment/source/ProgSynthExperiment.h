@@ -241,9 +241,13 @@ private:
   double PROG_MUT__PER_MOD_DUP;
   double PROG_MUT__PER_MOD_DEL;
 
+  size_t MIN_MEM_SIZE = 1;
+  size_t MAX_MEM_SIZE = MEM_SIZE;
+
 
   size_t MEM_TAG_INIT_MODE;
   bool MEM_TAG_EVOLVE;
+  bool MEM_CAPACITY_EVOLVE;
   double MEM_TAG_MUT__PER_BIT_FLIP;
   double MIN_TAG_SPECIFICITY;
   size_t MAX_CALL_DEPTH;
@@ -1003,6 +1007,11 @@ void ProgramSynthesisExperiment::SetupHardware() {
     eval_hardware->SetProgram(prog_org.GetGenome().program);
   });
   // If registers are evolving, update evaluation hardware's tags!
+  if (MEM_CAPACITY_EVOLVE && MEM_TAG_EVOLVE) {
+    begin_program_eval.AddAction([this](prog_org_t & prog_org) {
+      eval_hardware->SetMemSize(prog_org.GetGenome().register_tags.size());
+    });
+  }
   if (MEM_TAG_EVOLVE) {
     begin_program_eval.AddAction([this](prog_org_t & prog_org) {
       eval_hardware->SetMemTags(prog_org.GetGenome().register_tags);
@@ -1352,6 +1361,7 @@ void ProgramSynthesisExperiment::InitConfigs(const ProgramSynthesisConfig & conf
 
   MEM_TAG_INIT_MODE = config.MEM_TAG_INIT_MODE();
   MEM_TAG_EVOLVE = config.MEM_TAG_EVOLVE();
+  MEM_CAPACITY_EVOLVE = config.MEM_CAPACITY_EVOLVE();
   MEM_TAG_MUT__PER_BIT_FLIP = config.MEM_TAG_MUT__PER_BIT_FLIP();
   MIN_TAG_SPECIFICITY = config.MIN_TAG_SPECIFICITY();
   MAX_CALL_DEPTH = config.MAX_CALL_DEPTH();
@@ -1368,6 +1378,7 @@ void ProgramSynthesisExperiment::InitProgPop_Random() {
   std::cout << "Randomly initializing program population." << std::endl;
   for (size_t i = 0; i < PROG_POP_SIZE; ++i) {
     emp::vector<tag_t> reg_tags;
+
     if (MEM_TAG_EVOLVE) {
       switch (MEM_TAG_INIT_MODE) {
         case (size_t)TAG_MEMORY_INIT_MODE_TYPE::HADAMARD: {
@@ -1383,6 +1394,12 @@ void ProgramSynthesisExperiment::InitProgPop_Random() {
           exit(-1);
         }
       }
+    }
+
+    // if we're evolving capacity, generate a random memory capacity
+    if (MEM_CAPACITY_EVOLVE) {
+      std::cout << "ADJUST MEM CAPACITY" << std::endl;
+      reg_tags.resize(random->GetUInt(1, MAX_MEM_SIZE+1));
     }
 
     switch (PROGRAM_ARGUMENT_MODE) {
