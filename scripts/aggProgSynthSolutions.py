@@ -9,48 +9,6 @@ import argparse, os, copy, errno, csv
 
 problem_whitelist = ["grade", "number-io", "for-loop-index", "median", "smallest", "small-or-large", "compare-string-lengths", "sum-of-squares", "string-lengths-backwards"]
 
-arg_types = {
-    "ARGS_BOTH": "Both",
-    "ARGS_NUM_ONLY": "Numeric",
-    "ARGS_NUM": "Numeric",
-    "ARGS_TAG_ONLY": "Tag-based",
-    "ARGS_TAG_BF": "Tag-BitFlips",
-    "ARGS_TAG": "Tag"
-}
-
-mut_rates = {
-    "MUT_5": "0.5",
-    "MUT_1": "0.1",
-    "MUT_01": "0.01",
-    "MUT_001": "0.001",
-    "MUT_0001": "0.0001",
-    "MUT_00001": "0.00001",
-    "MUT_075": "0.075",
-    "MUT_05": "0.05",
-    "MUT_025": "0.025",
-    "MUT_0075": "0.0075",
-    "MUT_005": "0.005",
-    "MUT_0025": "0.0025",
-    "TAG_BF_0005": "0.0005",
-    "TAG_BF_001": "0.001",
-    "TAG_BF_002": "0.002",
-    "TAG_BF_005": "0.005",
-    "TAG_BF_01": "0.01",
-    "TAG_BF_02": "0.02",
-    "TAG_BF_05": "0.05"
-}
-
-tag_rand_rates = {
-    "TAG_RAND_0005": "0.0005",
-    "TAG_RAND_001": "0.001",
-    "TAG_RAND_002": "0.002",
-    "TAG_RAND_005": "0.005",
-    "TAG_RAND_01": "0.01",
-    "TAG_RAND_02": "0.02",
-    "TAG_RAND_05": "0.05"
-}
-
-
 def mkdir_p(path):
     """
     This is functionally equivalent to the mkdir -p [fname] bash command
@@ -85,7 +43,7 @@ def main():
         update = args.update
         print("Looking for best solutions from update {} or earlier.".format(update))
 
-        solutions_content = "treatment,run_id,problem,arg_type,arg_mut_rate,tag_rand_rate,mem_searching,solution_found,solution_length,update_found,update_first_solution_found,program\n"
+        solutions_content = "treatment,run_id,problem,arg_type,num_arg_mut_rate,tag_bf_mut_rate,tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solution_found,solution_length,update_found,update_first_solution_found,program,program_register_cnt,program_register_tags\n"
 
         for run in runs:
             print("Run: {}".format(run))
@@ -95,80 +53,99 @@ def main():
             treatment = run
             run_sols = os.path.join(run_dir, "output", "solutions.csv")
 
-            problem = run.strip("PROBLEM_").split("__")[0]
-
-            arg_type = None
-            for thing in arg_types:
-                if thing in treatment: arg_type = arg_types[thing]
-            if arg_type == None:
-                print("Unrecognized arg type! Exiting.")
-                exit()
-
-            arg_mut_rate = None
-            for thing in mut_rates:
-                if thing in treatment: arg_mut_rate = mut_rates[thing]
-            if arg_mut_rate == None:
-                print("Unrecognized arg mut rate! Exiting.")
-                exit()
-
-            tag_rand_rate = None
-            for thing in tag_rand_rates:
-                if thing in treatment: tag_rand_rate = tag_rand_rates[thing]
-            if tag_rand_rate == None:
-                tag_rand_rate = "NONE"
-                print("Failed to figure out tag randomization rate!")
-
+            # gimme dat run log
             run_log_fpath = os.path.join(run_dir, "run.log")
             with open(run_log_fpath, "r") as logfp:
                 log_content = logfp.read()
 
-            mem_searching = None
-            if "set PROGRAM_ARGUMENTS_TYPE_SEARCH 0" in log_content:
-                mem_searching = "0"
-            else:
-                mem_searching = "1"
+            run_settings = {}
+            settings_content = log_content.split("==============================")[2]
+            for line in settings_content.split("\n"):
+                if line[:3] == "set":
+                    line = line.split(" ")
+                    run_settings[line[1]] = line[2]
 
-            file_content = None
-            with open(run_sols, "r") as fp:
-                file_content = fp.read().strip().split("\n")
+            print(run_settings)
+            exit()
 
-            header = file_content[0].split(",")
-            header_lu = {header[i].strip():i for i in range(0, len(header))}
-            file_content = file_content[1:]
 
-            solutions = [l for l in csv.reader(file_content, quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)]
-            # Add smallest solution to smallest solution doc
-            min_program = None
-            sol_found = False
-            if len(solutions) > 0:
-                # Find the smallest program
-                for i in range(0, len(solutions)):
-                    sol_update = int(solutions[i][header_lu["update"]])
-                    if sol_update > update: continue
-                    if min_program == None:
-                        min_program = i
-                        sol_found = True
-                    elif float(solutions[i][header_lu["program_len"]]) < float(solutions[min_program][header_lu["program_len"]]):
-                        min_program = i
-                        sol_found = True
 
-            if sol_found:
-                # Record timing info about first solution
-                update_first_sol = solutions[0][header_lu["update"]]
-                # Record info about smallest solution
-                min_sol = solutions[min_program]
-                program_len = min_sol[header_lu["program_len"]]
-                update_found = min_sol[header_lu["update"]]
-                program = min_sol[header_lu["program"]]
-            else:
-                update_first_sol = "NONE"
-                program_len = "NONE"
-                update_found = "NONE"
-                program = "NONE"
-            # "treatment,run_id,problem,uses_cohorts,solution_found,solution_length,update_found,program\n"
-            solutions_content += ",".join(map(str,[treatment, run_id, problem, arg_type, arg_mut_rate, tag_rand_rate, mem_searching, sol_found, program_len, update_found, update_first_sol, '"{}"'.format(program)])) + "\n"
-        with open(os.path.join(dump, "min_programs__update_{}.csv".format(update)), "w") as fp:
-            fp.write(solutions_content)
+            # problem,
+            # arg_type,num_arg_mut_rate,tag_bf_mut_rate,tag_rand_rate,mem_searching,register_tags_init,register_tags_evolve,register_capacity_evolve,register_duplication_rate,register_deletion_rate,solution_found,solution_length,update_found,update_first_solution_found,program,program_register_cnt,program_register_tags
+
+
+        #     problem = run.strip("PROBLEM_").split("__")[0]
+
+        #     arg_type = None
+        #     for thing in arg_types:
+        #         if thing in treatment: arg_type = arg_types[thing]
+        #     if arg_type == None:
+        #         print("Unrecognized arg type! Exiting.")
+        #         exit()
+
+        #     arg_mut_rate = None
+        #     for thing in mut_rates:
+        #         if thing in treatment: arg_mut_rate = mut_rates[thing]
+        #     if arg_mut_rate == None:
+        #         print("Unrecognized arg mut rate! Exiting.")
+        #         exit()
+
+        #     tag_rand_rate = None
+        #     for thing in tag_rand_rates:
+        #         if thing in treatment: tag_rand_rate = tag_rand_rates[thing]
+        #     if tag_rand_rate == None:
+        #         tag_rand_rate = "NONE"
+        #         print("Failed to figure out tag randomization rate!")
+
+
+
+        #     mem_searching = None
+        #     if "set PROGRAM_ARGUMENTS_TYPE_SEARCH 0" in log_content:
+        #         mem_searching = "0"
+        #     else:
+        #         mem_searching = "1"
+
+        #     file_content = None
+        #     with open(run_sols, "r") as fp:
+        #         file_content = fp.read().strip().split("\n")
+
+        #     header = file_content[0].split(",")
+        #     header_lu = {header[i].strip():i for i in range(0, len(header))}
+        #     file_content = file_content[1:]
+
+        #     solutions = [l for l in csv.reader(file_content, quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True)]
+        #     # Add smallest solution to smallest solution doc
+        #     min_program = None
+        #     sol_found = False
+        #     if len(solutions) > 0:
+        #         # Find the smallest program
+        #         for i in range(0, len(solutions)):
+        #             sol_update = int(solutions[i][header_lu["update"]])
+        #             if sol_update > update: continue
+        #             if min_program == None:
+        #                 min_program = i
+        #                 sol_found = True
+        #             elif float(solutions[i][header_lu["program_len"]]) < float(solutions[min_program][header_lu["program_len"]]):
+        #                 min_program = i
+        #                 sol_found = True
+
+        #     if sol_found:
+        #         # Record timing info about first solution
+        #         update_first_sol = solutions[0][header_lu["update"]]
+        #         # Record info about smallest solution
+        #         min_sol = solutions[min_program]
+        #         program_len = min_sol[header_lu["program_len"]]
+        #         update_found = min_sol[header_lu["update"]]
+        #         program = min_sol[header_lu["program"]]
+        #     else:
+        #         update_first_sol = "NONE"
+        #         program_len = "NONE"
+        #         update_found = "NONE"
+        #         program = "NONE"
+        #     # "treatment,run_id,problem,uses_cohorts,solution_found,solution_length,update_found,program\n"
+        #     solutions_content += ",".join(map(str,[treatment, run_id, problem, arg_type, arg_mut_rate, tag_rand_rate, mem_searching, sol_found, program_len, update_found, update_first_sol, '"{}"'.format(program)])) + "\n"
+        # with open(os.path.join(dump, "min_programs__update_{}.csv".format(update)), "w") as fp:
+        #     fp.write(solutions_content)
 
 if __name__ == "__main__":
     main()
